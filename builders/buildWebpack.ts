@@ -36,7 +36,7 @@ export function buildWebpack(options: BuildOptions): webpack.Configuration {
 
         output: {
             filename: '[name].js',
-            publicPath: '/public/',
+            publicPath: '',
             path: paths.output,
             clean: true,
         },
