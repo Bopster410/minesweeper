@@ -1,0 +1,1 @@
+export { getGameFieldCanvas } from './ui';
