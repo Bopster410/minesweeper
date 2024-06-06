@@ -50,7 +50,7 @@ export class Tile {
             this.coordsId,
             this.vaoInfo,
             {
-                size: this.size,
+                size: { width: this.size, height: this.size },
                 coords: this.coords,
                 textureCoords: TILE_TEXTURE_COORDS.CLOSED,
             },

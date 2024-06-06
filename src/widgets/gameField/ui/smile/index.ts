@@ -1,0 +1,1 @@
+export { getSmile } from './lib';

@@ -1,7 +1,7 @@
 import canvasTmpl from './index.template.pug';
 import './index.style.scss';
 import { Component } from '@/shared/@types/index.component';
-import { CanvasProps, Coords } from './index.types';
+import { CanvasProps, Coords, Size } from './index.types';
 import {
     bufferStaticData,
     clearBuffers,
@@ -39,7 +39,7 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         {
             vao: VaoInfo;
             coords: Coords;
-            size: number;
+            size: Size;
             texture: WebGLTexture;
             textureCoords: number[];
         }
@@ -130,7 +130,7 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         name: string,
         vao: VaoInfo,
         params: {
-            size: number;
+            size: Size;
             coords: Coords;
             textureCoords: number[];
         },
@@ -145,10 +145,14 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         });
     }
 
+    removeObject(name: string) {
+        this.objects.delete(name);
+    }
+
     updateObject(
         name: string,
         params: {
-            size?: number;
+            size?: Size;
             coords?: Coords;
             textureCoords?: number[];
         },
@@ -182,7 +186,11 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
 
         // Render all objects
         this.objects.forEach((info) => {
-            this.renderingContext.uniform1f(this.sizeUniform, info.size);
+            this.renderingContext.uniform2f(
+                this.sizeUniform,
+                info.size.width,
+                info.size.height,
+            );
             this.renderingContext.uniform2f(
                 this.coordsUniform,
                 info.coords.x,
