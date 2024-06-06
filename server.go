@@ -12,11 +12,22 @@ func main() {
 		http.ServeFile(w, r, p)
 	})
 
-	fs := http.FileServer(http.Dir("./public"))
-	http.Handle("/public/", http.StripPrefix("/public/", fs))
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		p := "./public/index.html"
+		http.ServeFile(w, r, p)
+	})
+
+	http.HandleFunc("/index.js", func(w http.ResponseWriter, r *http.Request) {
+		p := "./public/index.js"
+		http.ServeFile(w, r, p)
+	})
+
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		p := "./public/favicon.ico"
+		http.ServeFile(w, r, p)
+	})
+	http.HandleFunc("/tiletextures.png", func(w http.ResponseWriter, r *http.Request) {
+		p := "./public/tiletextures.png"
 		http.ServeFile(w, r, p)
 	})
 

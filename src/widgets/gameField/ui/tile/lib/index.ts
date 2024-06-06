@@ -9,9 +9,7 @@ export function generateTileId(x: number, y: number) {
 export async function getNewTile(canvas: Canvas) {
     let vaoInfo: VaoInfo = null;
 
-    const texture = await canvas.createNewTextureFromFile(
-        './public/tiletextures.png',
-    );
+    const texture = await canvas.createNewTextureFromFile('./tiletextures.png');
 
     const createVao = () => {
         vaoInfo = canvas.createNewVao(6);
