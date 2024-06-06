@@ -1,5 +1,8 @@
 import { genRandomInt } from '@/shared/lib/random';
 import { Tile, TileType } from '../ui/tile';
+import { Coords } from '@/shared/canvas';
+
+export { gameState } from './gameState';
 
 export type FieldTileInfo = {
     type: TileType;
@@ -15,7 +18,7 @@ export function generateField(
     initialY?: number,
 ) {
     const field = new Map<number, Map<number, FieldTileInfo>>();
-    const bombs: { column: number; row: number }[] = [];
+    const bombs: Coords[] = [];
     let x = 0;
     let y = 0;
     let totalGenerated = 0;
@@ -32,7 +35,6 @@ export function generateField(
             x = genRandomInt(widthTiles);
             y = genRandomInt(heightTiles);
 
-            console.log(initialX === x, initialY === y);
             if (
                 initialX !== undefined &&
                 initialY !== undefined &&
@@ -49,7 +51,7 @@ export function generateField(
             // new y
             if (!field.get(x).has(y)) {
                 field.get(x).set(y, { type: 'bomb' });
-                bombs.push({ column: x, row: y });
+                bombs.push({ x: x, y: y });
                 // increase bombs around
                 for (
                     let j = x - 1 >= 0 ? x - 1 : 0;
@@ -93,12 +95,14 @@ export function generateField(
 
 export function getClickedCoords(
     e: MouseEvent,
+    fieldX: number,
+    fieldY: number,
     height: number,
     tileSize: number,
 ) {
     return {
-        i: Math.floor(e.offsetX / tileSize),
-        j: Math.floor((height - e.offsetY) / tileSize),
+        i: Math.floor((e.offsetX - fieldX) / tileSize),
+        j: Math.floor((height - e.offsetY - fieldY) / tileSize),
     };
 }
 
@@ -185,16 +189,15 @@ export function openAdjacentFields(
     return { openedType: openedType, totalOpened: totalOpened };
 }
 
-export function openBombs(
-    tiles: Tile[][],
-    bombs: { column: number; row: number }[],
-) {
+export function openBombs(tiles: Tile[][], bombs: Coords[]) {
     bombs.forEach((bomb) => {
-        tiles[bomb.column][bomb.row].open();
+        tiles[bomb.x][bomb.y].open();
     });
 }
 
 export function drawEmptyField(
+    x: number,
+    y: number,
     width: number,
     height: number,
     tileSize: number,
@@ -204,7 +207,9 @@ export function drawEmptyField(
     for (let i = 0; i < width; i++) {
         tiles.push([]);
         for (let j = 0; j < height; j++) {
-            tiles[i].push(addEmptyTile(i * tileSize, j * tileSize, tileSize));
+            tiles[i].push(
+                addEmptyTile(x + i * tileSize, y + j * tileSize, tileSize),
+            );
         }
     }
     return tiles;
