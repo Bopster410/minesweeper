@@ -1,4 +1,5 @@
 import './tiletextures.png';
+import './tiletextures2.png';
 
 export const TILE_TEXTURE_COORDS = {
     EMPTY: [0, 1, 0, 0.75, 0.25, 0.75, 0.25, 0.75, 0.25, 1, 0, 1],

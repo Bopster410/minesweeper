@@ -1,0 +1,15 @@
+.choose-size-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.choose-size-menu__custom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.choose-size-menu__submit-btn {
+    align-self: flex-end;
+}

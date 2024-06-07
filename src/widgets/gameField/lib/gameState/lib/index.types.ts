@@ -11,4 +11,5 @@ export type GameState = {
     status: GameStatus;
     bombsLeft?: number;
     noBombsFieldsLeft?: number;
+    flagsPut?: number;
 };

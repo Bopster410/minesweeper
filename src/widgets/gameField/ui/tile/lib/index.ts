@@ -1,15 +1,17 @@
 import { Canvas, VaoInfo } from '@/shared/canvas';
 import { TileType } from '../ui/index.types';
 import { Tile } from '../ui';
+import { DEFAULT_TEXTURE, TEXTURE_FILES } from './index.constants';
 
 export function generateTileId(x: number, y: number) {
     return `tile[${x}:${y}]`;
 }
 
 export async function getNewTile(canvas: Canvas) {
-    let vaoInfo: VaoInfo = null;
+    const textures = await canvas.loadAllTextures(TEXTURE_FILES);
+    let currentTexture = DEFAULT_TEXTURE;
 
-    const texture = await canvas.createNewTextureFromFile('./tiletextures.png');
+    let vaoInfo: VaoInfo = null;
 
     const createVao = () => {
         vaoInfo = canvas.createNewVao(6);
@@ -34,7 +36,7 @@ export async function getNewTile(canvas: Canvas) {
             size,
             'closed',
             type,
-            texture,
+            textures.get(currentTexture),
             bombsAround,
         );
     };
@@ -55,6 +57,16 @@ export async function getNewTile(canvas: Canvas) {
             bombsAround: number,
         ) => {
             return addNewTile('digit', x, y, size, bombsAround);
+        },
+
+        changeTexture(name: string) {
+            if (textures.has(name)) {
+                currentTexture = name;
+            }
+        },
+
+        updateTexture(tile: Tile) {
+            tile.tileTexture = textures.get(currentTexture);
         },
     };
 }

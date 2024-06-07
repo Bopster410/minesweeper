@@ -1,0 +1,10 @@
+mixin item
+    div(class='choose-theme-menu__item')
+        block
+
+form(class=`${className} choose-theme-menu`)
+    h4 Тема
+    each theme in themes
+        +item
+            input(type="radio" id=`${theme.name}` name='params' value=`${theme.name}`)
+            label(for=`${theme.name}`)= `${theme.text}`

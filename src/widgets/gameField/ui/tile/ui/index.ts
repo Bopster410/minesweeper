@@ -74,6 +74,11 @@ export class Tile {
         return this.state;
     }
 
+    set tileTexture(texture: WebGLTexture) {
+        this.texture = texture;
+        this.canvas.updateObject(this.id, { texture: texture });
+    }
+
     protected updateTextureCoords() {
         let newTextureCoords: number[] = null;
         if (this.state === 'opened') {
@@ -128,6 +133,10 @@ export class Tile {
             newTextureCoords = TILE_TEXTURE_COORDS.FLAG;
         }
 
+        if (this.state === 'flag-wrong') {
+            newTextureCoords = TILE_TEXTURE_COORDS.FLAG_WRONG;
+        }
+
         this.canvas.updateObject(this.coordsId, {
             textureCoords: newTextureCoords,
         });
@@ -179,21 +188,16 @@ export class Tile {
     }
 
     open() {
-        this.changeState('opened');
+        if (this.state === 'flag' && this.type === 'bomb') return;
+
+        if (this.state === 'flag' && this.type !== 'bomb')
+            this.changeState('flag-wrong');
+
+        if (this.state !== 'flag' && this.state !== 'flag-wrong')
+            this.changeState('opened');
     }
 
     close() {
         this.changeState('closed');
-    }
-
-    toggle() {
-        const opened = this.state === 'opened';
-        if (opened) {
-            this.close();
-        }
-
-        if (!opened) {
-            this.open();
-        }
     }
 }

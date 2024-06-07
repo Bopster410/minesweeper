@@ -5,6 +5,7 @@ import {
     VERTICAL_WIDTH,
 } from '../textures';
 import { FieldBorderInfo, TopSectionInfo } from './index.types';
+import { DEFAULT_TEXTURE, TEXTURE_FILES } from './index.constants';
 
 function renderHorizontal(
     canvas: Canvas,
@@ -354,9 +355,9 @@ function renderBorder(
 }
 
 export async function getBorder(canvas: Canvas, topSectionHeight: number) {
-    const texture = await canvas.createNewTextureFromFile(
-        './textureborder.png',
-    );
+    const textures = await canvas.loadAllTextures(TEXTURE_FILES);
+    let currentTexture = DEFAULT_TEXTURE;
+
     const borderVao = canvas.createNewVao(6);
 
     let info: {
@@ -381,7 +382,7 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
                 newFieldHeight,
                 topSectionHeight,
                 borderVao,
-                texture,
+                textures.get(currentTexture),
             );
 
             return {
@@ -391,5 +392,28 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
                 topSectionY: info.topSectionY,
             };
         },
+
+        changeTexture(name: string) {
+            if (textures.has(name)) {
+                currentTexture = name;
+            }
+        },
+
+        updateTexture() {
+            Object.values(info.fieldBorderInfo).forEach((name) => {
+                canvas.updateObject(name, {
+                    texture: textures.get(currentTexture),
+                });
+            });
+
+            Object.values(info.topSectionInfo).forEach((name) => {
+                canvas.updateObject(name, {
+                    texture: textures.get(currentTexture),
+                });
+            });
+        },
+
+        width: () => 2 * VERTICAL_WIDTH,
+        height: () => 3 * HORIZONTAL_HEIGHT,
     };
 }

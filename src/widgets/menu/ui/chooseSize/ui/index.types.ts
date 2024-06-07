@@ -1,13 +1,9 @@
-export type MenuProps = {
+export type ChooseSizeMenuProps = {
     className: string;
     presets?: {
         width: number;
         height: number;
         bombs: number;
-        name: string;
-        text: string;
-    }[];
-    themes?: {
         name: string;
         text: string;
     }[];
