@@ -1,5 +1,6 @@
 import { GameState, GameStatus } from './index.types';
 
+// eslint-disable-next-line max-lines-per-function
 export function getNewGameState() {
     const gameState: GameState = {
         status: 'menu',
@@ -10,9 +11,15 @@ export function getNewGameState() {
         (newStatus?: GameStatus) => void
     >();
     const bombsSubscriptions = new Map<string, (newBombs?: number) => void>();
+
     const noBombsFieldsSubscriptions = new Map<
         string,
         (newNoBombsFields?: number) => void
+    >();
+
+    const flagsSubscriptions = new Map<
+        string,
+        (newFlagsPut?: number) => void
     >();
 
     const setStatus = (newStatus: GameStatus) => {
@@ -37,6 +44,17 @@ export function getNewGameState() {
         });
     };
 
+    const setFLags = (newFlags: number) => {
+        if (newFlags === gameState.bombsLeft) {
+            return;
+        }
+
+        gameState.flagsPut = newFlags;
+        flagsSubscriptions.forEach((callback) => {
+            callback(newFlags);
+        });
+    };
+
     const setInitial = () => {
         setStatus('menu');
         setBombs(0);
@@ -49,6 +67,7 @@ export function getNewGameState() {
         getStatus: () => gameState.status,
         getBombsLeft: () => gameState.bombsLeft,
         getNoBombsFields: () => gameState.noBombsFieldsLeft,
+        getFlagsPut: () => gameState.flagsPut,
 
         addOnBombsChange: (
             name: string,
@@ -68,6 +87,12 @@ export function getNewGameState() {
         ) => {
             statusSubscriptions.set(name, callback);
         },
+        addOnFlagsChange: (
+            name: string,
+            callback: (newFlagsPut?: number) => void,
+        ) => {
+            flagsSubscriptions.set(name, callback);
+        },
 
         setStatus: (newStatus: GameStatus) => setStatus(newStatus),
         setBombs: (newBombs: number) => setBombs(newBombs),
@@ -81,5 +106,6 @@ export function getNewGameState() {
                 callback(newNoBombsFields);
             });
         },
+        setFlagsPut: (newFlags: number) => setFLags(newFlags),
     };
 }

@@ -1,4 +1,5 @@
 import './textureborder.png';
+import './textureborder2.png';
 
 export const TEXTURE_COORDS_BORDER = {
     CORNER_TOP_LEFT: [0, 1, 0, 0, 0.125, 0, 0.125, 0, 0.125, 1, 0, 1],

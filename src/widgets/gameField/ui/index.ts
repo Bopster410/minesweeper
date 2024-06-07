@@ -7,6 +7,7 @@ import {
     getClickedCoords,
     openAdjacentFields,
     openBombs,
+    openFlags,
     openFullField,
     updateField,
 } from '../lib';
@@ -14,11 +15,12 @@ import { ElementsPositions, Position } from './index.types';
 import { getBorder } from './border';
 import { getSmile } from './smile';
 import { Smile } from './smile/ui';
+import { Color } from '@/shared/canvas/lib/index.types';
 
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
 const SMILE_SIZE = 60;
 const TOP_SECTION_HEIGHT = 80;
+const MAX_WIDTH = 1000;
+const MAX_HEIGHT = 1000;
 
 function processClick(
     tiles: Tile[][],
@@ -66,6 +68,10 @@ function processRightClick(
 
     const tile = tiles[i][j];
     if (tile !== undefined) {
+        if (tile.tileState === 'opened') {
+            return null;
+        }
+
         const withFlag = tile.tileState === 'flag';
         if (withFlag) {
             tile.close();
@@ -75,14 +81,22 @@ function processRightClick(
             tile.putFlag();
         }
 
-        return { type: tile.tileType, state: tile.tileState };
+        return {
+            type: tile.tileType,
+            state: tile.tileState,
+            coords: { x: i, y: j },
+        };
     }
     return null;
 }
 
-function isObjectClicked(position: Position, e: MouseEvent) {
+function isObjectClicked(
+    position: Position,
+    e: MouseEvent,
+    canvasHeight: number,
+) {
     const clickX = e.offsetX;
-    const clickY = CANVAS_HEIGHT - e.offsetY;
+    const clickY = canvasHeight - e.offsetY;
     return (
         position.x <= clickX &&
         clickX <= position.x + position.width &&
@@ -91,12 +105,16 @@ function isObjectClicked(position: Position, e: MouseEvent) {
     );
 }
 
-function getClickedObject(e: MouseEvent, positions: ElementsPositions) {
-    if (isObjectClicked(positions.field, e)) {
+function getClickedObject(
+    e: MouseEvent,
+    positions: ElementsPositions,
+    canvasHeight: number,
+) {
+    if (isObjectClicked(positions.field, e, canvasHeight)) {
         return 'FIELD';
     }
 
-    if (isObjectClicked(positions.smile, e)) {
+    if (isObjectClicked(positions.smile, e, canvasHeight)) {
         return 'SMILE';
     }
 
@@ -113,21 +131,91 @@ function checkVictory(
     }
 }
 
+function clearTiles(tiles: Tile[][], canvas: Canvas) {
+    tiles.forEach((column, i) => {
+        column.forEach((element, j) => {
+            canvas.removeObject(element.id);
+            tiles[i][j] = null;
+        });
+    });
+}
+
 // Get canvas with game
 // eslint-disable-next-line max-lines-per-function
-export async function getGameFieldCanvas(parent: Element, className: string) {
+export async function getGameFieldCanvas(
+    parent: Element,
+    className: string,
+    initialTheme?: 'default' | 'forest',
+) {
+    let width = 0,
+        height = 0;
+
+    const tileSize = 30;
+    let totalBombs = 0;
+
+    const TEXTURES = new Map<
+        string,
+        {
+            border: () => void;
+            smile: () => void;
+            tile: () => void;
+            color: Color;
+        }
+    >();
+
+    let currentTexture = initialTheme ?? 'default';
+
+    TEXTURES.set('default', {
+        border: () => {
+            border.changeTexture('default');
+            border.updateTexture();
+        },
+        smile: () => {
+            smile.changeTexture('default');
+            smile.updateTexture(smileBtn);
+        },
+        tile: () => {
+            tile.changeTexture('default');
+            tiles.forEach((column) => {
+                column.forEach((el) => tile.updateTexture(el));
+            });
+        },
+        color: {
+            red: 192,
+            green: 192,
+            blue: 192,
+        },
+    });
+
+    TEXTURES.set('forest', {
+        border: () => {
+            border.changeTexture('forest');
+            border.updateTexture();
+        },
+        smile: () => {
+            smile.changeTexture('forest');
+            smile.updateTexture(smileBtn);
+        },
+        tile: () => {
+            tile.changeTexture('forest');
+            tiles.forEach((column) => {
+                column.forEach((el) => tile.updateTexture(el));
+            });
+        },
+        color: {
+            red: 157,
+            green: 195,
+            blue: 169,
+        },
+    });
+
     // Init canvas
     const canvas = new Canvas(parent, {
         className: className,
-        width: CANVAS_WIDTH,
-        height: CANVAS_HEIGHT,
+        width: 0,
+        height: 0,
+        clearColor: TEXTURES.get(currentTexture).color,
     });
-
-    const width = 10,
-        height = 10;
-
-    const tileSize = 30;
-    const totalBombs = 10;
 
     // Init ui components
     const tile = await getNewTile(canvas);
@@ -140,8 +228,36 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
     let tiles: Tile[][] = [];
 
     let bobmsPositions: Coords[] = [];
+    const flagsPositions = new Set<Coords>();
 
     let smileBtn: Smile = null;
+
+    const updateSize = (params: {
+        width?: number;
+        height?: number;
+        bombs?: number;
+    }) => {
+        let wasChanged = false;
+        if (params.width > 0 && params?.width <= MAX_WIDTH) {
+            width = params.width;
+            canvas.width = width * tileSize + border.width();
+            wasChanged = true;
+        }
+
+        if (params?.height > 0 && params?.height <= MAX_HEIGHT) {
+            height = params.height;
+            canvas.height =
+                height * tileSize + border.height() + TOP_SECTION_HEIGHT;
+            wasChanged = true;
+        }
+
+        if (params?.bombs > 0 && params?.bombs <= width * height) {
+            totalBombs = params.bombs;
+            wasChanged = true;
+        }
+
+        return wasChanged;
+    };
 
     const setMenu = () => {
         gameStateMethods.setInitial();
@@ -151,6 +267,10 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
             tileSize * width,
             tileSize * height,
         );
+
+        clearTiles(tiles, canvas);
+
+        flagsPositions.clear();
 
         // Draw initial empty field
         tiles = drawEmptyField(
@@ -183,6 +303,9 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
                 height: SMILE_SIZE,
             },
         };
+
+        canvas.clear();
+        drawField();
     };
 
     gameStateMethods.addOnStatusChange('status', (status) => {
@@ -203,10 +326,18 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
         }
     });
 
+    gameStateMethods.addOnStatusChange('draw', () => {
+        drawField();
+    });
+
     gameStateMethods.addOnBombsChange('victoryCheck', (bombs) => {
         checkVictory(bombs, gameStateMethods.getNoBombsFields(), () =>
             gameStateMethods.setStatus('victory'),
         );
+    });
+
+    gameStateMethods.addOnBombsChange('draw', () => {
+        drawField();
     });
 
     gameStateMethods.addOnNoBombsFieldsChange('victoryCheck', (noBombsLeft) => {
@@ -215,8 +346,17 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
         );
     });
 
+    gameStateMethods.addOnNoBombsFieldsChange('draw', () => {
+        drawField();
+    });
+
+    gameStateMethods.addOnFlagsChange('draw', () => {
+        drawField();
+    });
+
     canvas.htmlElement.addEventListener('click', (e) => {
-        const clicked = getClickedObject(e, positions);
+        const clicked = getClickedObject(e, positions, canvas.height);
+
         if (gameStateMethods.getStatus() === 'menu') {
             if (clicked !== 'FIELD') {
                 return;
@@ -226,7 +366,7 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
                 e,
                 positions.field.x,
                 positions.field.y,
-                CANVAS_HEIGHT,
+                canvas.height,
                 tileSize,
             );
 
@@ -252,7 +392,7 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
                     positions.field.x,
                     positions.field.y,
                     tileSize,
-                    CANVAS_HEIGHT,
+                    canvas.height,
                     e,
                 );
                 if (result === null) {
@@ -261,6 +401,7 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
 
                 if (result?.openedType === 'bomb') {
                     openBombs(tiles, bobmsPositions);
+                    openFlags(tiles, flagsPositions);
                     gameStateMethods.setStatus('defeat');
                 }
 
@@ -285,7 +426,7 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
                 positions.field.x,
                 positions.field.y,
                 tileSize,
-                CANVAS_HEIGHT,
+                canvas.height,
                 e,
             );
             if (result === null) {
@@ -293,35 +434,66 @@ export async function getGameFieldCanvas(parent: Element, className: string) {
             }
 
             // If player put flag on bomb
-            if (result.state === 'flag' && result.type === 'bomb') {
-                gameStateMethods.setBombs(gameStateMethods.getBombsLeft() - 1);
+            if (result.state === 'flag') {
+                if (result.type === 'bomb') {
+                    gameStateMethods.setBombs(
+                        gameStateMethods.getBombsLeft() - 1,
+                    );
+                }
+                flagsPositions.add(result.coords);
+                gameStateMethods.setFlagsPut(
+                    gameStateMethods.getFlagsPut() + 1,
+                );
             }
 
             // If player removed flag from bomb
-            if (result.state === 'closed' && result.type === 'bomb') {
-                gameStateMethods.setBombs(gameStateMethods.getBombsLeft() + 1);
+            if (result.state === 'closed') {
+                if (result.type === 'bomb') {
+                    gameStateMethods.setBombs(
+                        gameStateMethods.getBombsLeft() + 1,
+                    );
+                }
+                flagsPositions.delete(result.coords);
+                gameStateMethods.setFlagsPut(
+                    gameStateMethods.getFlagsPut() - 1,
+                );
             }
         }
     });
 
     const drawField = () => {
         canvas.draw();
-
-        requestAnimationFrame(() => {
-            drawField();
-        });
     };
 
     return {
         canvas: canvas,
         drawField: () => {
+            drawField();
+        },
+        update: (params: {
+            width?: number;
+            height?: number;
+            bombs?: number;
+        }) => {
+            if (updateSize(params)) {
+                setMenu();
+            }
+        },
+        stopGame: () => {
             setMenu();
-            requestAnimationFrame(() => {
-                drawField();
-            });
         },
         openField: () => {
             openFullField(tiles);
+        },
+        changeTexture: (name: 'default' | 'forest') => {
+            if (TEXTURES.get(name) && name !== currentTexture) {
+                currentTexture = name;
+                TEXTURES.get(name).border();
+                TEXTURES.get(name).tile();
+                TEXTURES.get(name).smile();
+                canvas.clearColor(TEXTURES.get(name).color);
+                drawField();
+            }
         },
     };
 }
