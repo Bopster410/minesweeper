@@ -1,4 +1,5 @@
 import './texturesmile.png';
+import './texturesmile2.png';
 
 export const SMILE_TEXTURE_COORDS = {
     DEFAULT: [0, 1, 0, 0, 0.2, 0, 0.2, 0, 0.2, 1, 0, 1],

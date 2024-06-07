@@ -1,0 +1,17 @@
+.app {
+    display: grid;
+    justify-content: center;
+}
+
+.app__header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid;
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.app__main {
+    margin: auto;
+}

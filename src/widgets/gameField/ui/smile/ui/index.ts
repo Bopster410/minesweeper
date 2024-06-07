@@ -73,6 +73,11 @@ export class Smile {
         return this.coords;
     }
 
+    set smileTexture(texture: WebGLTexture) {
+        this.texture = texture;
+        this.canvas.updateObject(this.id, { texture: texture });
+    }
+
     destroy() {
         this.canvas.removeObject(this.id);
     }

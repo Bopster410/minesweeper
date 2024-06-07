@@ -9,7 +9,54 @@ export type FieldTileInfo = {
     bombsAround?: number;
 };
 
+function chooseNearestEmpty(
+    field: Map<number, Map<number, FieldTileInfo>>,
+    widthTiles: number,
+    heightTiles: number,
+    x: number,
+    y: number,
+) {
+    let searchSize = 1;
+
+    while (searchSize * 2 < widthTiles && searchSize * 2 < heightTiles) {
+        for (
+            let j = x - searchSize >= 0 ? x - searchSize : 0;
+            j <=
+            (x + searchSize <= widthTiles ? x + searchSize : widthTiles - 1);
+            j++
+        ) {
+            for (
+                let k = y - searchSize >= 0 ? y - searchSize : 0;
+                k <=
+                (j + searchSize <= heightTiles
+                    ? y + searchSize
+                    : heightTiles - 1);
+                k++
+            ) {
+                if (j === x && k === y) continue;
+
+                if (!field.has(j)) {
+                    return { x: j, y: k };
+                }
+
+                if (!field.get(j).has(k)) {
+                    return { x: j, y: k };
+                }
+
+                if (field.get(j).get(k).type !== 'bomb') {
+                    return { x: j, y: k };
+                }
+            }
+        }
+
+        searchSize++;
+    }
+
+    return null;
+}
+
 // Generates field
+// eslint-disable-next-line max-lines-per-function
 export function generateField(
     widthTiles: number,
     heightTiles: number,
@@ -41,7 +88,20 @@ export function generateField(
                 x === initialX &&
                 y === initialY
             ) {
-                continue;
+                const coords = chooseNearestEmpty(
+                    field,
+                    widthTiles,
+                    heightTiles,
+                    x,
+                    y,
+                );
+                if (coords === null) {
+                    totalGenerated++;
+                    continue;
+                }
+
+                x = coords.x;
+                y = coords.y;
             }
             // new
             if (!field.has(x)) {
@@ -49,7 +109,7 @@ export function generateField(
             }
 
             // new y
-            if (!field.get(x).has(y)) {
+            if (!field.get(x).has(y) || field.get(x).get(y).type !== 'bomb') {
                 field.get(x).set(y, { type: 'bomb' });
                 bombs.push({ x: x, y: y });
                 // increase bombs around
@@ -192,6 +252,12 @@ export function openAdjacentFields(
 export function openBombs(tiles: Tile[][], bombs: Coords[]) {
     bombs.forEach((bomb) => {
         tiles[bomb.x][bomb.y].open();
+    });
+}
+
+export function openFlags(tiles: Tile[][], flags: Set<Coords>) {
+    flags.forEach(({ x, y }) => {
+        tiles[x][y].open();
     });
 }
 

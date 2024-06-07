@@ -2,13 +2,28 @@ import { DEFAULT_COLOR } from './index.constnats';
 import { Color } from './index.types';
 export { initProgram } from './shaders';
 
+const COLOR_SIZE = 256;
+
 export function clearBuffers(gl: WebGL2RenderingContext) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+}
+
+function normalizeColor(color: Color): Color {
+    return {
+        red: color.red / COLOR_SIZE,
+        green: color.green / COLOR_SIZE,
+        blue: color.blue / COLOR_SIZE,
+        aplha: color.aplha ?? 1.0,
+    };
 }
 
 export function clearColor(gl: WebGL2RenderingContext, color?: Color) {
     color = color ?? DEFAULT_COLOR;
     color.aplha = color.aplha ?? 1.0;
+
+    if (color.red > 1 || color.blue > 1 || color.green) {
+        color = normalizeColor(color);
+    }
 
     gl.clearColor(color.red, color.green, color.blue, color.aplha);
 }
