@@ -2,17 +2,27 @@ import './index.style.scss';
 import tmpl from './index.template.pug';
 import { Component } from '@/shared/@types/index.component';
 import { ChooseSizeMenuProps } from './index.types';
+import { Button } from '@/shared/uikit/button';
 
 export class ChooseSizeMenu extends Component<
     HTMLFormElement,
     ChooseSizeMenuProps
 > {
+    protected submitBtn: Button;
+
     constructor(parent: Element, props: ChooseSizeMenuProps) {
         super(parent, tmpl, props);
     }
 
     protected render() {
         this.renderTemplate();
+        this.submitBtn = new Button(this.htmlElement, {
+            className: 'choose-size-menu__submit-btn',
+            type: 'submit',
+            btnStyle: 'darkLight',
+            size: 'no-padding',
+            btnText: 'Готово',
+        });
         this.componentDidMount();
     }
 
@@ -25,9 +35,7 @@ export class ChooseSizeMenu extends Component<
             const target = e.target as Element;
             if (target.classList.contains('choose-size-menu__custom-input')) {
                 const inputTarget = target as HTMLInputElement;
-                inputTarget.value =
-                    inputTarget.value.slice(0, -1) +
-                    (e.data === ' ' || isNaN(Number(e.data)) ? '' : e.data);
+                inputTarget.value = inputTarget.value.replace(/[^\d]*/gi, '');
             }
         });
     }

@@ -1,5 +1,6 @@
 import { Component } from '@/shared/@types/index.component';
 import tmpl from './index.template.pug';
+import './index.style.scss';
 import { ChooseThemeProps } from './index.types';
 
 export class ChooseThemeMenu extends Component<

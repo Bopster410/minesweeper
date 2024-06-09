@@ -3,13 +3,20 @@
     height: 100%;
     bottom: 0px;
     left: 0px;
-    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-    z-index: calc(var(--z-index-on-top) + 10);
+    z-index: calc(var(--z-index-on-top, 100) + 10);
+    background-color: var(--background-color, #fff);
     position: fixed;
     overflow: hidden;
-    background-color: white;
     opacity: 0;
     width: 0;
     box-sizing: border-box;
     padding-bottom: 0;
+}
+
+.menu-header {
+    margin-bottom: 20px;
+}
+
+.menu__choose-size {
+    margin-bottom: 30px;
 }

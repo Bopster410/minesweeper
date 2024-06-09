@@ -2,13 +2,21 @@ $header-width: 400px;
 $header-height: 50px;
 
 .app {
-    display: grid;
-    justify-content: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
     width: max-content;
-    margin: auto;
+    min-width: 100vw;
+    min-height: 100vh;
+    color: var(--font-color, #000);
+    background-color: var(--background-color, #fff);
+    transition: background-color 300ms;
 }
 
 .app__header {
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid;
@@ -20,4 +28,11 @@ $header-height: 50px;
 .app__main {
     margin: auto;
     overflow: auto;
+}
+
+@media (max-width: 475px) {
+    .app__header {
+        width: 100%;
+        padding-inline: 10px;
+    }
 }

@@ -1,9 +1,9 @@
 mixin item
-    div(class='choose-theme-menu__item')
+    div(class='choose-theme-menu__input')
         block
 
 form(class=`${className} choose-theme-menu`)
-    h4 Тема
+    div(class="header menu-header") Тема
     each theme in themes
         +item
             input(type="radio" id=`${theme.name}` name='params' value=`${theme.name}`)
