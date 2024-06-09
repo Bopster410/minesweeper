@@ -43,6 +43,10 @@ export function bufferStaticData(
 ) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+}
+
+// Put vertices in buffer data
+export function unBindBuffer(gl: WebGL2RenderingContext) {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
 
@@ -93,10 +97,11 @@ export function loadTextureFile(src: string) {
 
 export function initTwoBufferVao(
     gl: WebGL2RenderingContext,
-    positionBuffer: WebGLBuffer,
-    textureCoordsBuffer: WebGLBuffer,
+    buffer: WebGLBuffer,
     positionAttr: number,
     textureCoordsAttr: number,
+    sizeAttr: number,
+    coordsAttr: number,
 ) {
     const vao = gl.createVertexArray();
 
@@ -109,12 +114,15 @@ export function initTwoBufferVao(
 
     gl.enableVertexAttribArray(positionAttr);
     gl.enableVertexAttribArray(textureCoordsAttr);
+    gl.enableVertexAttribArray(sizeAttr);
+    gl.enableVertexAttribArray(coordsAttr);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
     gl.vertexAttribPointer(positionAttr, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordsBuffer);
     gl.vertexAttribPointer(textureCoordsAttr, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(sizeAttr, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(coordsAttr, 2, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 

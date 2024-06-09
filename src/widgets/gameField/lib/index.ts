@@ -15,25 +15,31 @@ function chooseNearestEmpty(
     heightTiles: number,
     x: number,
     y: number,
+    initialX: number,
+    initialY: number,
 ) {
     let searchSize = 1;
 
-    while (searchSize * 2 < widthTiles && searchSize * 2 < heightTiles) {
+    while (
+        searchSize * 2 < widthTiles + 1 ||
+        searchSize * 2 < heightTiles + 1
+    ) {
         for (
             let j = x - searchSize >= 0 ? x - searchSize : 0;
             j <=
-            (x + searchSize <= widthTiles ? x + searchSize : widthTiles - 1);
+            (x + searchSize < widthTiles ? x + searchSize : widthTiles - 1);
             j++
         ) {
             for (
                 let k = y - searchSize >= 0 ? y - searchSize : 0;
                 k <=
-                (j + searchSize <= heightTiles
+                (y + searchSize < heightTiles
                     ? y + searchSize
                     : heightTiles - 1);
                 k++
             ) {
-                if (j === x && k === y) continue;
+                if ((j === x && k === y) || (j === initialX && k === initialY))
+                    continue;
 
                 if (!field.has(j)) {
                     return { x: j, y: k };
@@ -70,23 +76,29 @@ export function generateField(
     let y = 0;
     let totalGenerated = 0;
 
-    // TODO if total bombs >= max size => fill with bombs
+    bombsTotal =
+        bombsTotal <= widthTiles * heightTiles - 1
+            ? bombsTotal
+            : widthTiles * heightTiles - 1;
 
     // TODO if total bombs > empty space => iterate trough empty tiles
 
     for (let i = 0; i < bombsTotal; i++) {
         while (
             totalGenerated !== i + 1 &&
-            totalGenerated !== widthTiles * heightTiles
+            totalGenerated !== widthTiles * heightTiles - 1
         ) {
-            x = genRandomInt(widthTiles);
-            y = genRandomInt(heightTiles);
+            x = genRandomInt(widthTiles - 1);
+            y = genRandomInt(heightTiles - 1);
 
             if (
-                initialX !== undefined &&
-                initialY !== undefined &&
-                x === initialX &&
-                y === initialY
+                (initialX !== undefined &&
+                    initialY !== undefined &&
+                    x === initialX &&
+                    y === initialY) ||
+                (field.has(x) &&
+                    field.get(x).has(y) &&
+                    field.get(x).get(y).type === 'bomb')
             ) {
                 const coords = chooseNearestEmpty(
                     field,
@@ -94,9 +106,11 @@ export function generateField(
                     heightTiles,
                     x,
                     y,
+                    initialX,
+                    initialY,
                 );
                 if (coords === null) {
-                    totalGenerated++;
+                    // totalGenerated++;
                     continue;
                 }
 
@@ -150,7 +164,7 @@ export function generateField(
         }
     }
 
-    return { field: field, bombs: bombs };
+    return { field: field, bombs: bombs, totalGenerated: totalGenerated };
 }
 
 export function getClickedCoords(
