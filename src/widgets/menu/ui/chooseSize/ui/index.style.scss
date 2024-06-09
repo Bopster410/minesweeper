@@ -7,9 +7,24 @@
 .choose-size-menu__custom {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .choose-size-menu__submit-btn {
     align-self: flex-end;
+}
+
+.choose-size-menu__custom {
+    margin-top: 8px;
+}
+
+.choose-size-menu__custom-input {
+    margin-left: 20px;
+    background-color: var(--hover-color);
+    height: 2rem;
+    font-size: 1.4rem;
+    color: var(--font-color);
+    outline: none;
+    border-radius: 8px;
+    box-sizing: border-box;
 }

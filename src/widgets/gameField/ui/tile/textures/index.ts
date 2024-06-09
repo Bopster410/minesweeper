@@ -1,6 +1,7 @@
 import { SquareCoords } from '@/shared/canvas/ui/index.types';
 import './tiletextures.png';
 import './tiletextures2.png';
+import './tiletextures_mine.png';
 
 export const TILE_TEXTURE_COORDS_OLD = {
     BOMB: [0, 0.25, 0, 0, 0.25, 0, 0.25, 0, 0.25, 0.25, 0, 0.25],

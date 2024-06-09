@@ -1,6 +1,7 @@
 import { SquareCoords } from '@/shared/canvas/ui/index.types';
 import './texturesmile.png';
 import './texturesmile2.png';
+import './texturesmile_mine.png';
 
 export const SMILE_TEXTURE_COORDS: { [name: string]: SquareCoords } = {
     DEFAULT: {

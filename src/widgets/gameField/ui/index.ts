@@ -11,11 +11,10 @@ import {
     openFullField,
     updateField,
 } from '../lib';
-import { ElementsPositions, Position } from './index.types';
+import { ElementsPositions, Position, Theme } from './index.types';
 import { getBorder } from './border';
 import { getSmile } from './smile';
 import { Smile } from './smile/ui';
-import { Color } from '@/shared/canvas/lib/index.types';
 
 const SMILE_SIZE = 60;
 const TOP_SECTION_HEIGHT = 80;
@@ -131,12 +130,95 @@ function checkVictory(
     }
 }
 
+function setTextures(
+    changeBorderTexture: (name: string) => void,
+    updateBorderTexture: () => void,
+    changeSmileTexture: (name: string) => void,
+    updateSmileTexture: () => void,
+    changeTilesTexture: (name: string) => void,
+    updateTilesTexture: () => void,
+) {
+    const textures = new Map<string, Theme>();
+    textures.set('default', {
+        border: () => {
+            changeBorderTexture('default');
+            updateBorderTexture();
+        },
+        smile: () => {
+            changeSmileTexture('default');
+            updateSmileTexture();
+        },
+        tile: () => {
+            changeTilesTexture('default');
+            updateTilesTexture();
+        },
+        color: {
+            red: 192,
+            green: 192,
+            blue: 192,
+        },
+        text: 'Классика',
+    });
+
+    textures.set('forest', {
+        border: () => {
+            changeBorderTexture('forest');
+            updateBorderTexture();
+        },
+        smile: () => {
+            changeSmileTexture('forest');
+            updateSmileTexture();
+        },
+        tile: () => {
+            changeTilesTexture('forest');
+            updateTilesTexture();
+        },
+        color: {
+            red: 157,
+            green: 195,
+            blue: 169,
+        },
+        text: 'Лесная',
+    });
+
+    textures.set('mine', {
+        border: () => {
+            changeBorderTexture('mine');
+            updateBorderTexture();
+        },
+        smile: () => {
+            changeSmileTexture('mine');
+            updateSmileTexture();
+        },
+        tile: () => {
+            changeTilesTexture('mine');
+            updateTilesTexture();
+        },
+        color: {
+            red: 157,
+            green: 195,
+            blue: 169,
+        },
+        text: 'Шахтерская',
+    });
+
+    return textures;
+}
+
+function getAvailableThemes(themes: Map<string, Theme>) {
+    const themesInfo: { name: string; text: string }[] = [];
+    themes.forEach((theme, name) => {
+        themesInfo.push({ name: name, text: theme.text });
+    });
+    return themesInfo;
+}
+
 // Get canvas with game
 // eslint-disable-next-line max-lines-per-function
 export async function getGameFieldCanvas(
     parent: Element,
     className: string,
-    initialTheme?: 'default' | 'forest',
+    initialTheme: 'default' | 'forest' | 'mine',
 ) {
     let width = 0,
         height = 0;
@@ -144,70 +226,30 @@ export async function getGameFieldCanvas(
     const tileSize = 30;
     let totalBombs = 0;
 
-    const TEXTURES = new Map<
-        string,
-        {
-            border: () => void;
-            smile: () => void;
-            tile: () => void;
-            color: Color;
-        }
-    >();
-
-    let currentTexture = initialTheme ?? 'default';
-
-    TEXTURES.set('default', {
-        border: () => {
-            border.changeTexture('default');
-            border.updateTexture();
-        },
-        smile: () => {
-            smile.changeTexture('default');
-            smile.updateTexture();
-        },
-        tile: () => {
-            tile.changeTexture('default');
-            tile.updateTexture();
-        },
-        color: {
-            red: 192,
-            green: 192,
-            blue: 192,
-        },
-    });
-
-    TEXTURES.set('forest', {
-        border: () => {
-            border.changeTexture('forest');
-            border.updateTexture();
-        },
-        smile: () => {
-            smile.changeTexture('forest');
-            smile.updateTexture();
-        },
-        tile: () => {
-            tile.changeTexture('forest');
-            tile.updateTexture();
-        },
-        color: {
-            red: 157,
-            green: 195,
-            blue: 169,
-        },
-    });
+    let currentTexture = initialTheme;
 
     // Init canvas
     const canvas = new Canvas(parent, {
         className: className,
         width: 0,
         height: 0,
-        clearColor: TEXTURES.get(currentTexture).color,
     });
 
     // Init ui components
     const tile = await getNewTile(canvas);
     const border = await getBorder(canvas, TOP_SECTION_HEIGHT);
     const smile = await getSmile(canvas);
+
+    const textures = setTextures(
+        (name: string) => border.changeTexture(name),
+        () => border.updateTexture(),
+        (name: string) => smile.changeTexture(name),
+        () => smile.updateTexture(),
+        (name: string) => tile.changeTexture(name),
+        () => tile.updateTexture(),
+    );
+
+    canvas.color = textures.get(initialTheme).color;
 
     const gameStateMethods = gameState;
     let positions: ElementsPositions = null;
@@ -479,14 +521,17 @@ export async function getGameFieldCanvas(
         openField: () => {
             openFullField(tiles);
         },
-        changeTexture: (name: 'default' | 'forest') => {
-            if (TEXTURES.get(name) && name !== currentTexture) {
+        changeTexture: (name: 'default' | 'forest' | 'mine') => {
+            if (textures.get(name) && name !== currentTexture) {
                 currentTexture = name;
-                TEXTURES.get(name).border();
-                TEXTURES.get(name).tile();
-                TEXTURES.get(name).smile();
-                canvas.clearColor(TEXTURES.get(name).color);
+                textures.get(name).border();
+                textures.get(name).tile();
+                textures.get(name).smile();
+                canvas.color = textures.get(name).color;
             }
+        },
+        availableThemes: () => {
+            return getAvailableThemes(textures);
         },
     };
 }

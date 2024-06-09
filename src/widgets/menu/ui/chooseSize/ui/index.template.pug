@@ -3,7 +3,7 @@ mixin item
         block
 
 form(class=`${className} choose-size-menu`)
-    h4 Сложность
+    div(class="header menu-header") Сложность
     each preset in presets
         +item
             input(type="radio" id=`${preset.name}` name='params' value=`${preset.width}:${preset.height}:${preset.bombs}`)
@@ -15,4 +15,3 @@ form(class=`${className} choose-size-menu`)
             input(class="choose-size-menu__custom-input" type="text" name='custom-width' placeholder='ширина')
             input(class="choose-size-menu__custom-input" type="text" name='custom-height' placeholder='длина')
             input(class="choose-size-menu__custom-input" type="text" name='custom-bombs' placeholder='бомбы')
-    button(type='submit' class='choose-size-menu__submit-btn') Готово

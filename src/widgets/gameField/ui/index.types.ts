@@ -1,3 +1,5 @@
+import { Color } from '@/shared/canvas/lib/index.types';
+
 export type GameCanvasProps = {
     className: string;
 };
@@ -27,4 +29,12 @@ export type GameState = {
         field: Position;
         smile: Position;
     };
+};
+
+export type Theme = {
+    border: () => void;
+    smile: () => void;
+    tile: () => void;
+    color: Color;
+    text: string;
 };

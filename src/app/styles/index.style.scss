@@ -1,0 +1,38 @@
+@font-face {
+    font-family: 'Press Start 2P';
+    src: url('@/shared/fonts/PressStart2P-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('@/shared/fonts/Roboto-Regular.ttf');
+}
+
+html {
+    height: max-content;
+    width: max-content;
+}
+
+body {
+    margin: 0px;
+}
+
+.header {
+    font-size: 2rem;
+    font-family: 'Press Start 2P';
+}
+
+.text {
+    font-family: 'Roboto';
+    font-size: 1.4rem;
+}
+
+input[type='radio'] {
+    margin: 0 10px 0 0;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+input[type='radio']:checked {
+    accent-color: var(--font-color);
+}
