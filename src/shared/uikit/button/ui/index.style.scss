@@ -1,0 +1,114 @@
+$btn-default-bg-color: #fff;
+
+.btn {
+    border-radius: 4px;
+    background-color: $btn-default-bg-color;
+    border: 0;
+    outline: none;
+    font-size: 1.4rem;
+
+    color: #000;
+    padding-block: 0;
+    transition: color 300ms;
+}
+
+.btn__icon > svg {
+    width: 32px;
+    height: 32px;
+}
+
+.btn:hover {
+    cursor: pointer;
+}
+
+.btn:focus {
+    cursor: pointer;
+}
+
+// Bright button
+.btn_bright {
+    background-color: var(--color-primary-normal);
+    transition: background-color var(--transition-time-normal);
+    color: white;
+    font-weight: 700;
+}
+
+.btn_bright:hover {
+    background-color: var(--color-primary-light);
+}
+
+// Red button
+.btn_red {
+    @extend .btn_bright;
+    background-color: var(--color-error-normal);
+}
+
+.btn_red:hover {
+    background-color: var(--color-error-light);
+}
+
+// Button with outline
+.btn_white-with-bg {
+    border-radius: 8px;
+    width: 50px;
+    transition: background-color var(--transition-time-normal);
+    color: #c0c3c5;
+    font-weight: 700;
+}
+
+.btn_white-with-bg:hover {
+    background-color: #efefef;
+}
+
+// White button
+.btn_white {
+    background-color: #fff;
+    transition: color var(--transition-time-normal);
+    color: #c0c3c5;
+    font-weight: 700;
+}
+
+.btn_white:hover {
+    color: var(--color-primary-normal);
+    font-weight: 700;
+}
+
+.btn--loading {
+    position: relative;
+}
+
+.btn--loading {
+    .btn__icon,
+    .btn__text {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
+.btn_dark-light {
+    color: var(--font-color);
+    background: none;
+    font-weight: 600;
+    transition: 150ms;
+    padding: 4px;
+}
+
+.btn_dark-light:hover {
+    background-color: var(--hover-color);
+}
+
+.btn--loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 4px solid transparent;
+    border-top-color: var(--color-background-dark);
+    border-radius: 50%;
+    animation: button-loading-spinner 1s ease infinite;
+}

@@ -104,51 +104,7 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         // Output merger
         this.htmlElement.width = this.htmlElement.clientWidth;
         this.htmlElement.height = this.htmlElement.clientHeight;
-
-        /*
-         * this.positionBuffers.set(
-         *     3,
-         *     initNewBuffer(
-         *         this.gl,
-         *         new Float32Array([-0.5, -0.5, 0.0, 0.5, 0.5, -0.5]),
-         *     ),
-         * );
-         */
-
-        /*
-         * this.positionBuffers.set(
-         *     6,
-         *     initNewBuffer(
-         *         this.gl,
-         *         new Float32Array([-1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1]),
-         *     ),
-         * );
-         */
     }
-
-    /*
-     * createNewVao(totalVertices: number): VaoInfo {
-     *     if (!this.positionBuffers.has(totalVertices)) {
-     *         return null;
-     *     }
-     *
-     *     const textureData = new Float32Array(totalVertices * 2);
-     *     const textureBuffer = this.gl.createBuffer();
-     *
-     *     return {
-     *         vao: initTwoBufferVao(
-     *             this.gl,
-     *             this.positionBuffers.get(totalVertices),
-     *             textureBuffer,
-     *             this.positionAttributeLocation,
-     *             this.textureAttributeLocation,
-     *         ),
-     *         totalVertices: totalVertices,
-     *         textureData: textureData,
-     *         textureBuffer: textureBuffer,
-     *     };
-     * }
-     */
 
     protected addNewBuffer(bufferName: string, texture: WebGLTexture) {
         if (this.renderingBuffers.has(bufferName)) return false;
@@ -394,8 +350,13 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         this.renderingBuffers.get(bufferName).texture = texture;
     }
 
-    createNewTexture(pixels: TexImageSource, width: number, height: number) {
-        return createTexture(this.gl, pixels, width, height);
+    createNewTexture(
+        pixels: TexImageSource,
+        width: number,
+        height: number,
+        mipmap?: boolean,
+    ) {
+        return createTexture(this.gl, pixels, width, height, mipmap);
     }
 
     set width(width: number) {
@@ -428,15 +389,21 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         return total;
     }
 
-    async createNewTextureFromFile(fileName: string) {
+    async createNewTextureFromFile(fileName: string, mipmap?: boolean) {
         const image = await loadTextureFile(fileName);
-        return createTexture(this.gl, image, image.width, image.height);
+        return createTexture(this.gl, image, image.width, image.height, mipmap);
     }
 
-    async loadAllTextures(config: { [name: string]: string }) {
+    async loadAllTextures(
+        config: { [name: string]: string },
+        mipmap?: boolean,
+    ) {
         const textures = new Map<string, WebGLTexture>();
         for (const [name, src] of Object.entries(config)) {
-            textures.set(name, await this.createNewTextureFromFile(src));
+            textures.set(
+                name,
+                await this.createNewTextureFromFile(src, mipmap),
+            );
         }
         return textures;
     }
@@ -561,6 +528,10 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         }
 
         clearColor(this.gl, this.props.clearColor);
+    }
+
+    set color(color: Color) {
+        this.props.clearColor = color;
     }
 
     clearBuffers() {

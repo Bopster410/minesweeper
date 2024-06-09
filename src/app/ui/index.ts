@@ -4,10 +4,14 @@ import appTmpl from './index.template.pug';
 import { Component } from '@/shared/@types/index.component';
 import { Canvas } from '@/shared/canvas';
 import { Menu } from '@/widgets/menu';
+import { setDarkTheme, setLightTheme } from '../styles';
+import { Button } from '@/shared/uikit/button';
+import { getDarkLightBtn, getSlidersBtn } from '@/shared/uikit/button/lib';
 
 export class App extends Component<HTMLDivElement> {
     protected gameCanvas: Canvas;
     protected menu: Menu;
+    protected menuBtn: Button;
     protected draw: () => void;
     protected changeTheme: (name: string) => void;
     protected updateSize: (params: {
@@ -17,6 +21,8 @@ export class App extends Component<HTMLDivElement> {
     }) => void;
     protected mainElement: Element;
     protected headerElement: Element;
+    protected changeThemeBtn: Button;
+    protected currentTheme: 'dark' | 'light';
 
     constructor(parent: Element) {
         super(parent, appTmpl, { className: 'app' });
@@ -25,13 +31,13 @@ export class App extends Component<HTMLDivElement> {
     protected componentDidMount() {
         this.menu.form.addEventListener('submit', (e) => {
             e.preventDefault();
+            this.menu.close();
             const data = this.menu.data;
             this.updateSize({
                 width: data.width,
                 height: data.height,
                 bombs: data.bombs,
             });
-            this.menu.close();
         });
 
         this.menu.changeThemeElement.addEventListener(
@@ -48,11 +54,24 @@ export class App extends Component<HTMLDivElement> {
             },
         );
 
-        this.htmlElement
-            .getElementsByClassName('open-menu-btn')[0]
-            .addEventListener('click', () => {
-                this.menu.open();
-            });
+        this.menuBtn.htmlElement.addEventListener('click', () => {
+            this.menu.open();
+        });
+
+        this.changeThemeBtn.htmlElement.addEventListener('click', () => {
+            const isDarkTheme = this.currentTheme === 'dark';
+            if (isDarkTheme) {
+                setLightTheme();
+                this.currentTheme = 'light';
+                this.changeThemeBtn.toggle();
+            }
+
+            if (!isDarkTheme) {
+                setDarkTheme();
+                this.currentTheme = 'dark';
+                this.changeThemeBtn.toggle();
+            }
+        });
     }
 
     protected render() {
@@ -62,7 +81,22 @@ export class App extends Component<HTMLDivElement> {
         this.headerElement =
             this.htmlElement.getElementsByClassName('app__header')[0];
 
-        getGameFieldCanvas(this.mainElement, 'app__game-canvas')
+        this.menuBtn = getSlidersBtn(this.headerElement, {
+            className: 'app__menu-btn',
+            btnStyle: 'darkLight',
+            type: 'button',
+        });
+
+        this.changeThemeBtn = getDarkLightBtn(this.headerElement, {
+            className: 'app__theme-btn',
+            btnStyle: 'darkLight',
+            type: 'button',
+        });
+
+        this.currentTheme = 'light';
+        setLightTheme();
+
+        getGameFieldCanvas(this.mainElement, 'app__game-canvas', 'default')
             .then((data) => {
                 this.gameCanvas = data.canvas;
                 this.draw = data.drawField;
@@ -93,13 +127,9 @@ export class App extends Component<HTMLDivElement> {
                             text: 'Профессионал',
                         },
                     ],
-                    themes: [
-                        { name: 'default', text: 'Классика' },
-                        { name: 'forest', text: 'Лесная' },
-                    ],
+                    themes: data.availableThemes(),
                 });
 
-                this.changeTheme('default');
                 this.menu.changeTheme('default');
                 const params = this.menu.choosePreset('intermediate');
                 if (params !== null) {

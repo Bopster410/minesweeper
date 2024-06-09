@@ -63,6 +63,7 @@ export function createTexture(
     pixels: TexImageSource,
     width: number,
     height: number,
+    mipmap?: boolean,
 ) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -80,7 +81,11 @@ export function createTexture(
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+
+    if (mipmap ?? true) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
 
     return texture;
 }
