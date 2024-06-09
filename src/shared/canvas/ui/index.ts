@@ -1,17 +1,16 @@
 import canvasTmpl from './index.template.pug';
 import './index.style.scss';
 import { Component } from '@/shared/@types/index.component';
-import { CanvasProps, Coords, Size } from './index.types';
+import { CanvasProps, Coords, Size, SquareCoords } from './index.types';
 import {
     bufferStaticData,
     clearBuffers,
     clearColor,
     createTexture,
     fullCanvasViewport,
-    initNewBuffer,
     initProgram,
-    initTwoBufferVao,
     loadTextureFile,
+    unBindBuffer,
 } from '../lib';
 import { Color } from '../lib/index.types';
 
@@ -22,98 +21,381 @@ export type VaoInfo = {
     textureData: Float32Array;
     textureBuffer: WebGLBuffer;
 };
+export type ObjectInfo = {
+    index: number;
+    coords: Coords;
+    size: Size;
+    textureCoords: SquareCoords;
+};
+export type RenderingBufferInfo = {
+    bufferValues: number[];
+    texture: WebGLTexture;
+    objects: Map<string, ObjectInfo>;
+};
+export type BufferMethods = {
+    addObject: (
+        name: string,
+        params: {
+            size: Size;
+            coords: Coords;
+            textureCoords: SquareCoords;
+        },
+    ) => void;
+    updateObject: (
+        name: string,
+        params: {
+            size?: Size;
+            coords?: Coords;
+            textureCoords?: SquareCoords;
+        },
+    ) => void;
+    updateTexture: (texture: WebGLTexture) => void;
+    clear: () => void;
+};
+
+const TOTAL_VERTICES = 6;
+const TOTAL_VERTEX_VALUES = 8;
+const STEP = TOTAL_VERTICES * TOTAL_VERTEX_VALUES;
+const OFFSET = {
+    TEXTURE_X: 2,
+    TEXTURE_Y: 3,
+    X: 4,
+    Y: 5,
+    WIDTH: 6,
+    HEIGHT: 7,
+};
+
+const DATA_SIZE = 4;
 
 export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
-    protected renderingContext: WebGL2RenderingContext;
+    protected gl: WebGL2RenderingContext;
     protected program: WebGLProgram;
     protected positionAttributeLocation: number;
     protected textureAttributeLocation: number;
+    protected coordsAttributeLocation: number;
+    protected sizeAttributeLocation: number;
     protected vertexShader: WebGLShader;
     protected fragmentShader: WebGLShader;
-    protected coordsUniform: WebGLUniformLocation;
-    protected sizeUniform: WebGLUniformLocation;
     protected canvasSizeUniform: WebGLUniformLocation;
-    protected positionBuffers: Map<number, WebGLBuffer>;
-    protected objects: Map<
-        string,
-        {
-            vao: VaoInfo;
-            coords: Coords;
-            size: Size;
-            texture: WebGLTexture;
-            textureCoords: number[];
-        }
-    >;
+    protected renderingBuffers: Map<string, RenderingBufferInfo>;
+    protected drawBuffer: WebGLBuffer;
 
     constructor(parent: Element, props: CanvasProps) {
         super(parent, canvasTmpl, props);
-        this.objects = new Map();
-        this.positionBuffers = new Map();
+        this.renderingBuffers = new Map();
         this.initWebGL();
     }
 
     protected initWebGL() {
-        this.renderingContext = this.htmlElement.getContext('webgl2');
-        const data = initProgram(this.renderingContext);
+        this.gl = this.htmlElement.getContext('webgl2');
+        const data = initProgram(this.gl);
         this.program = data.program;
         this.positionAttributeLocation = data.positionAttrLocation;
         this.textureAttributeLocation = data.textureAttrLocation;
         this.vertexShader = data.vertexShader;
         this.fragmentShader = data.fragmentShader;
-        this.coordsUniform = data.coordsUniform;
-        this.sizeUniform = data.sizeUniform;
+        this.coordsAttributeLocation = data.coordsAttributeLocation;
+        this.sizeAttributeLocation = data.sizeAttributeLocation;
         this.canvasSizeUniform = data.canvasSizeUniform;
+        this.drawBuffer = this.gl.createBuffer();
 
-        this.renderingContext.pixelStorei(
-            this.renderingContext.UNPACK_FLIP_Y_WEBGL,
-            true,
-        );
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
         // Output merger
         this.htmlElement.width = this.htmlElement.clientWidth;
         this.htmlElement.height = this.htmlElement.clientHeight;
 
-        this.positionBuffers.set(
-            3,
-            initNewBuffer(
-                this.renderingContext,
-                new Float32Array([-0.5, -0.5, 0.0, 0.5, 0.5, -0.5]),
-            ),
-        );
+        /*
+         * this.positionBuffers.set(
+         *     3,
+         *     initNewBuffer(
+         *         this.gl,
+         *         new Float32Array([-0.5, -0.5, 0.0, 0.5, 0.5, -0.5]),
+         *     ),
+         * );
+         */
 
-        this.positionBuffers.set(
-            6,
-            initNewBuffer(
-                this.renderingContext,
-                new Float32Array([-1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1]),
-            ),
-        );
+        /*
+         * this.positionBuffers.set(
+         *     6,
+         *     initNewBuffer(
+         *         this.gl,
+         *         new Float32Array([-1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1]),
+         *     ),
+         * );
+         */
     }
 
-    createNewVao(totalVertices: number): VaoInfo {
-        if (!this.positionBuffers.has(totalVertices)) {
-            return null;
+    /*
+     * createNewVao(totalVertices: number): VaoInfo {
+     *     if (!this.positionBuffers.has(totalVertices)) {
+     *         return null;
+     *     }
+     *
+     *     const textureData = new Float32Array(totalVertices * 2);
+     *     const textureBuffer = this.gl.createBuffer();
+     *
+     *     return {
+     *         vao: initTwoBufferVao(
+     *             this.gl,
+     *             this.positionBuffers.get(totalVertices),
+     *             textureBuffer,
+     *             this.positionAttributeLocation,
+     *             this.textureAttributeLocation,
+     *         ),
+     *         totalVertices: totalVertices,
+     *         textureData: textureData,
+     *         textureBuffer: textureBuffer,
+     *     };
+     * }
+     */
+
+    protected addNewBuffer(bufferName: string, texture: WebGLTexture) {
+        if (this.renderingBuffers.has(bufferName)) return false;
+
+        this.renderingBuffers.set(bufferName, {
+            bufferValues: [],
+            texture: texture,
+            objects: new Map(),
+        });
+
+        return true;
+    }
+
+    protected addObjectToBuffer(
+        bufferName: string,
+        name: string,
+        params: {
+            size: Size;
+            coords: Coords;
+            textureCoords: SquareCoords;
+        },
+        quantity?: number,
+    ) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        if (this.renderingBuffers.get(bufferName).objects.has(name)) return;
+
+        quantity = quantity ?? 1;
+
+        this.renderingBuffers.get(bufferName).objects.set(name, {
+            index: this.renderingBuffers.get(bufferName).objects.size,
+            size: params.size,
+            coords: params.coords,
+            textureCoords: params.textureCoords,
+        });
+
+        for (let i = 0; i < quantity; i++) {
+            this.renderingBuffers.get(bufferName).bufferValues =
+                this.renderingBuffers
+                    .get(bufferName)
+                    .bufferValues.concat([
+                        -1,
+                        1,
+                        params.textureCoords.topLeft.x,
+                        params.textureCoords.topLeft.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                        -1,
+                        -1,
+                        params.textureCoords.bottomLeft.x,
+                        params.textureCoords.bottomLeft.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                        1,
+                        -1,
+                        params.textureCoords.bottomRight.x,
+                        params.textureCoords.bottomRight.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                        1,
+                        -1,
+                        params.textureCoords.bottomRight.x,
+                        params.textureCoords.bottomRight.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                        1,
+                        1,
+                        params.textureCoords.topRight.x,
+                        params.textureCoords.topRight.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                        -1,
+                        1,
+                        params.textureCoords.topLeft.x,
+                        params.textureCoords.topLeft.y,
+                        params.coords.x,
+                        params.coords.y,
+                        params.size.width,
+                        params.size.height,
+                    ]);
+        }
+    }
+
+    protected clearBuffer(bufferName: string) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        this.renderingBuffers.get(bufferName).objects.clear();
+        this.renderingBuffers.get(bufferName).bufferValues = [];
+    }
+
+    protected updateCoords(bufferName: string, name: string, coords: Coords) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        if (!this.renderingBuffers.get(bufferName).objects.has(name)) return;
+
+        this.renderingBuffers.get(bufferName).objects.get(name).coords = coords;
+        const index = this.renderingBuffers
+            .get(bufferName)
+            .objects.get(name).index;
+
+        for (let i = 0; i < TOTAL_VERTICES; i++) {
+            this.renderingBuffers.get(bufferName).bufferValues[
+                index * STEP + TOTAL_VERTEX_VALUES * i + OFFSET.X
+            ] = coords.x;
+            this.renderingBuffers.get(bufferName).bufferValues[
+                index * STEP + TOTAL_VERTEX_VALUES * i + OFFSET.Y
+            ] = coords.y;
+        }
+    }
+
+    protected updateSize(bufferName: string, name: string, size: Size) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        if (!this.renderingBuffers.get(bufferName).objects.has(name)) return;
+
+        this.renderingBuffers.get(bufferName).objects.get(name).size = size;
+        const index = this.renderingBuffers
+            .get(bufferName)
+            .objects.get(name).index;
+
+        for (let i = 0; i < TOTAL_VERTICES; i++) {
+            this.renderingBuffers.get(bufferName).bufferValues[
+                index * STEP + TOTAL_VERTEX_VALUES * i + OFFSET.WIDTH
+            ] = size.width;
+            this.renderingBuffers.get(bufferName).bufferValues[
+                index * STEP + TOTAL_VERTEX_VALUES * i + OFFSET.HEIGHT
+            ] = size.height;
+        }
+    }
+
+    protected updateTextureCoords(
+        bufferName: string,
+        name: string,
+        coords: SquareCoords,
+    ) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        if (!this.renderingBuffers.get(bufferName).objects.has(name)) return;
+
+        this.renderingBuffers.get(bufferName).objects.get(name).textureCoords =
+            coords;
+        const index = this.renderingBuffers
+            .get(bufferName)
+            .objects.get(name).index;
+
+        // Top left
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 0 + OFFSET.TEXTURE_X
+        ] = coords.topLeft.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 0 + OFFSET.TEXTURE_Y
+        ] = coords.topLeft.y;
+
+        // Bottom left
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 1 + OFFSET.TEXTURE_X
+        ] = coords.bottomLeft.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 1 + OFFSET.TEXTURE_Y
+        ] = coords.bottomLeft.y;
+
+        // Bottom right
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 2 + OFFSET.TEXTURE_X
+        ] = coords.bottomRight.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 2 + OFFSET.TEXTURE_Y
+        ] = coords.bottomRight.y;
+
+        // Bottom right
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 3 + OFFSET.TEXTURE_X
+        ] = coords.bottomRight.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 3 + OFFSET.TEXTURE_Y
+        ] = coords.bottomRight.y;
+
+        // Top right
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 4 + OFFSET.TEXTURE_X
+        ] = coords.topRight.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 4 + OFFSET.TEXTURE_Y
+        ] = coords.topRight.y;
+
+        // Top left
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 5 + OFFSET.TEXTURE_X
+        ] = coords.topLeft.x;
+        this.renderingBuffers.get(bufferName).bufferValues[
+            index * STEP + TOTAL_VERTEX_VALUES * 5 + OFFSET.TEXTURE_Y
+        ] = coords.topLeft.y;
+    }
+
+    protected updateObject(
+        bufferName: string,
+        name: string,
+        params: {
+            size?: Size;
+            coords?: Coords;
+            textureCoords?: SquareCoords;
+        },
+    ) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        if (!this.renderingBuffers.get(bufferName).objects.has(name)) return;
+
+        const object = this.renderingBuffers.get(bufferName).objects.get(name);
+
+        if (
+            params.coords &&
+            params?.coords !==
+                this.renderingBuffers.get(bufferName).objects.get(name).coords
+        ) {
+            this.updateCoords(bufferName, name, params.coords);
         }
 
-        const textureData = new Float32Array(totalVertices * 2);
-        const textureBuffer = this.renderingContext.createBuffer();
+        if (params.size && params?.size !== object.size) {
+            this.updateSize(bufferName, name, params.size);
+        }
 
-        return {
-            vao: initTwoBufferVao(
-                this.renderingContext,
-                this.positionBuffers.get(totalVertices),
-                textureBuffer,
-                this.positionAttributeLocation,
-                this.textureAttributeLocation,
-            ),
-            totalVertices: totalVertices,
-            textureData: textureData,
-            textureBuffer: textureBuffer,
-        };
+        if (
+            params.textureCoords &&
+            params?.textureCoords !== object.textureCoords
+        ) {
+            this.updateTextureCoords(bufferName, name, params.textureCoords);
+        }
+    }
+
+    protected updateTexture(bufferName: string, texture: WebGLTexture) {
+        if (!this.renderingBuffers.has(bufferName)) return;
+
+        this.renderingBuffers.get(bufferName).texture = texture;
     }
 
     createNewTexture(pixels: TexImageSource, width: number, height: number) {
-        return createTexture(this.renderingContext, pixels, width, height);
+        return createTexture(this.gl, pixels, width, height);
     }
 
     set width(width: number) {
@@ -138,82 +420,62 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         return this.props.height;
     }
 
+    get totalObjects() {
+        let total = 0;
+        this.renderingBuffers.forEach((buffer) => {
+            total += buffer.objects.size;
+        });
+        return total;
+    }
+
     async createNewTextureFromFile(fileName: string) {
         const image = await loadTextureFile(fileName);
-        return createTexture(
-            this.renderingContext,
-            image,
-            image.width,
-            image.height,
-        );
+        return createTexture(this.gl, image, image.width, image.height);
     }
 
     async loadAllTextures(config: { [name: string]: string }) {
         const textures = new Map<string, WebGLTexture>();
         for (const [name, src] of Object.entries(config)) {
-            console.log(name, src);
             textures.set(name, await this.createNewTextureFromFile(src));
         }
         return textures;
     }
 
-    addObject(
-        name: string,
-        vao: VaoInfo,
-        params: {
-            size: Size;
-            coords: Coords;
-            textureCoords: number[];
-        },
-        texture: WebGLTexture,
-    ) {
-        this.objects.set(name, {
-            vao: vao,
-            size: params.size,
-            coords: params.coords,
-            texture: texture,
-            textureCoords: params.textureCoords,
-        });
-    }
+    // Creates new buffer and public methods to work with it
+    createBuffer(bufferName: string, texture: WebGLTexture): BufferMethods {
+        if (!this.addNewBuffer(bufferName, texture)) return null;
 
-    removeObject(name: string) {
-        this.objects.delete(name);
-    }
+        return {
+            addObject: (
+                name: string,
+                params: {
+                    size: Size;
+                    coords: Coords;
+                    textureCoords: SquareCoords;
+                },
+            ) => {
+                this.addObjectToBuffer(bufferName, name, params);
+            },
 
-    updateObject(
-        name: string,
-        params: {
-            size?: Size;
-            coords?: Coords;
-            textureCoords?: number[];
-            texture?: WebGLTexture;
-        },
-    ) {
-        if (!this.objects.has(name)) {
-            return;
-        }
+            updateObject: (
+                name: string,
+                params: {
+                    size?: Size;
+                    coords?: Coords;
+                    textureCoords?: SquareCoords;
+                },
+            ) => {
+                this.updateObject(bufferName, name, params);
+            },
 
-        if (params.coords && params?.coords !== this.objects.get(name).coords) {
-            this.objects.get(name).coords = params.coords;
-        }
+            updateTexture: (texture: WebGLTexture) => {
+                this.updateTexture(bufferName, texture);
+            },
 
-        if (params.size && params?.size !== this.objects.get(name).size) {
-            this.objects.get(name).size = params.size;
-        }
-
-        if (
-            params.textureCoords &&
-            params?.textureCoords !== this.objects.get(name).textureCoords
-        ) {
-            this.objects.get(name).textureCoords = params.textureCoords;
-        }
-
-        if (
-            params.texture &&
-            params?.texture !== this.objects.get(name).texture
-        ) {
-            this.objects.get(name).texture = params.texture;
-        }
+            clear: () => {
+                this.clearBuffer(bufferName);
+            },
+        };
     }
 
     clear() {
@@ -222,50 +484,75 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
     }
 
     draw() {
+        const start = Date.now();
+
+        fullCanvasViewport(this.gl, this.htmlElement);
+        this.gl.useProgram(this.program);
         this.clear();
 
-        fullCanvasViewport(this.renderingContext, this.htmlElement);
-        this.renderingContext.useProgram(this.program);
+        this.gl.uniform2f(
+            this.canvasSizeUniform,
+            this.htmlElement.width,
+            this.htmlElement.height,
+        );
 
-        this.objects.forEach((info) => {
-            this.renderingContext.uniform2f(
-                this.canvasSizeUniform,
-                this.htmlElement.width,
-                this.htmlElement.height,
-            );
-
-            // Render all objects
-            this.renderingContext.uniform2f(
-                this.sizeUniform,
-                info.size.width,
-                info.size.height,
-            );
-            this.renderingContext.uniform2f(
-                this.coordsUniform,
-                info.coords.x,
-                info.coords.y,
-            );
-            this.renderingContext.bindVertexArray(info.vao.vao);
-
-            info.vao.textureData.set(info.textureCoords);
+        this.renderingBuffers.forEach((info) => {
+            // console.log(info);
             bufferStaticData(
-                this.renderingContext,
-                info.vao.textureBuffer,
-                info.vao.textureData,
+                this.gl,
+                this.drawBuffer,
+                new Float32Array(info.bufferValues),
             );
 
-            console.log(info.texture);
-            this.renderingContext.bindTexture(
-                this.renderingContext.TEXTURE_2D,
-                info.texture,
-            );
+            this.gl.bindTexture(this.gl.TEXTURE_2D, info.texture);
 
-            this.renderingContext.drawArrays(
-                this.renderingContext.TRIANGLES,
+            this.gl.vertexAttribPointer(
+                this.positionAttributeLocation,
+                2,
+                this.gl.FLOAT,
+                false,
+                DATA_SIZE * TOTAL_VERTEX_VALUES,
                 0,
-                info.vao.totalVertices,
             );
+            this.gl.vertexAttribPointer(
+                this.textureAttributeLocation,
+                2,
+                this.gl.FLOAT,
+                false,
+                DATA_SIZE * TOTAL_VERTEX_VALUES,
+                OFFSET.TEXTURE_X * DATA_SIZE,
+            );
+            this.gl.vertexAttribPointer(
+                this.sizeAttributeLocation,
+                2,
+                this.gl.FLOAT,
+                false,
+                DATA_SIZE * TOTAL_VERTEX_VALUES,
+                OFFSET.WIDTH * DATA_SIZE,
+            );
+            this.gl.vertexAttribPointer(
+                this.coordsAttributeLocation,
+                2,
+                this.gl.FLOAT,
+                false,
+                DATA_SIZE * TOTAL_VERTEX_VALUES,
+                OFFSET.X * DATA_SIZE,
+            );
+
+            this.gl.enableVertexAttribArray(this.positionAttributeLocation);
+            this.gl.enableVertexAttribArray(this.coordsAttributeLocation);
+            this.gl.enableVertexAttribArray(this.sizeAttributeLocation);
+            this.gl.enableVertexAttribArray(this.textureAttributeLocation);
+
+            this.gl.drawArrays(
+                this.gl.TRIANGLES,
+                0,
+                info.objects.size * TOTAL_VERTICES,
+            );
+            unBindBuffer(this.gl);
         });
+
+        // console.log('draw(): ', Date.now() - start);
     }
 
     clearColor(color?: Color) {
@@ -273,10 +560,10 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
             this.props.clearColor = color;
         }
 
-        clearColor(this.renderingContext, this.props.clearColor);
+        clearColor(this.gl, this.props.clearColor);
     }
 
     clearBuffers() {
-        clearBuffers(this.renderingContext);
+        clearBuffers(this.gl);
     }
 }

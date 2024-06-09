@@ -3,7 +3,7 @@ import { GameState, GameStatus } from './index.types';
 // eslint-disable-next-line max-lines-per-function
 export function getNewGameState() {
     const gameState: GameState = {
-        status: 'menu',
+        status: null,
     };
 
     const statusSubscriptions = new Map<
@@ -59,8 +59,6 @@ export function getNewGameState() {
         setStatus('menu');
         setBombs(0);
     };
-
-    setInitial();
 
     return {
         setInitial: setInitial,

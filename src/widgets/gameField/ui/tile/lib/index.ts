@@ -1,7 +1,8 @@
-import { Canvas, VaoInfo } from '@/shared/canvas';
+import { Canvas } from '@/shared/canvas';
 import { TileType } from '../ui/index.types';
 import { Tile } from '../ui';
 import { DEFAULT_TEXTURE, TEXTURE_FILES } from './index.constants';
+import { BufferMethods } from '@/shared/canvas/ui';
 
 export function generateTileId(x: number, y: number) {
     return `tile[${x}:${y}]`;
@@ -11,10 +12,10 @@ export async function getNewTile(canvas: Canvas) {
     const textures = await canvas.loadAllTextures(TEXTURE_FILES);
     let currentTexture = DEFAULT_TEXTURE;
 
-    let vaoInfo: VaoInfo = null;
+    let tileBuffer: BufferMethods = null;
 
     const createVao = () => {
-        vaoInfo = canvas.createNewVao(6);
+        tileBuffer = canvas.createBuffer('tiles', textures.get(currentTexture));
     };
 
     const addNewTile = (
@@ -24,19 +25,18 @@ export async function getNewTile(canvas: Canvas) {
         size: number,
         bombsAround?: number,
     ) => {
-        if (vaoInfo === null) {
+        if (tileBuffer === null) {
             createVao();
         }
 
         return new Tile(
-            canvas,
-            vaoInfo,
+            tileBuffer.addObject,
+            tileBuffer.updateObject,
             x,
             y,
             size,
             'closed',
             type,
-            textures.get(currentTexture),
             bombsAround,
         );
     };
@@ -65,8 +65,12 @@ export async function getNewTile(canvas: Canvas) {
             }
         },
 
-        updateTexture(tile: Tile) {
-            tile.tileTexture = textures.get(currentTexture);
+        updateTexture() {
+            tileBuffer?.updateTexture(textures.get(currentTexture));
+        },
+
+        clear: () => {
+            tileBuffer?.clear();
         },
     };
 }
