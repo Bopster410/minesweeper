@@ -16,3 +16,10 @@ export type Size = {
     width: number;
     height: number;
 };
+
+export type SquareCoords = {
+    topLeft: Coords;
+    bottomLeft: Coords;
+    bottomRight: Coords;
+    topRight: Coords;
+};

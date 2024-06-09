@@ -16,7 +16,7 @@ export class App extends Component<HTMLDivElement> {
         bombs?: number;
     }) => void;
     protected mainElement: Element;
-    headerElement: Element;
+    protected headerElement: Element;
 
     constructor(parent: Element) {
         super(parent, appTmpl, { className: 'app' });
@@ -43,6 +43,7 @@ export class App extends Component<HTMLDivElement> {
 
                 if (name) {
                     this.changeTheme(name);
+                    this.draw();
                 }
             },
         );
@@ -107,6 +108,8 @@ export class App extends Component<HTMLDivElement> {
 
                 this.componentDidMount();
             })
-            .catch(() => {});
+            .catch((e) => {
+                console.log(e);
+            });
     }
 }

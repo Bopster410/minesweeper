@@ -3,19 +3,17 @@ precision mediump float;
 
 in vec2 vertexPosition;
 in vec2 vertTextureCoords;
+in vec2 coords;
+in vec2 size;
 
 uniform vec2 canvasSize;
-uniform vec2 coords;
-uniform vec2 size;
 
 out vec2 fragTextureCoords;
 
 void main() {
     fragTextureCoords = vertTextureCoords;
 
-    vec2 finalPosition = vec2(
-        vertexPosition.x * (size.x / 2.0) + coords.x + (size.x / 2.0),
-        vertexPosition.y * (size.y / 2.0) + coords.y + (size.y / 2.0));
+    vec2 finalPosition = vertexPosition * (size / 2.0) + coords + (size / 2.0);
     vec2 clipPosition = (finalPosition / canvasSize) * 2.0 - 1.0;
 
     gl_Position = vec4(clipPosition, 0.0, 1.0);

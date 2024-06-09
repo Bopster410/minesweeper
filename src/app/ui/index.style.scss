@@ -1,17 +1,23 @@
+$header-width: 400px;
+$header-height: 50px;
+
 .app {
     display: grid;
     justify-content: center;
+    width: max-content;
+    margin: auto;
 }
 
 .app__header {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid;
-    width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    width: $header-width;
+    left: calc(50vw - $header-width / 2);
+    position: sticky;
 }
 
 .app__main {
     margin: auto;
+    overflow: auto;
 }

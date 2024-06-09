@@ -3,19 +3,26 @@ import { Smile } from '../ui';
 import { DEFAULT_TEXTURE, TEXTURE_FILES } from './index.constants';
 
 export async function getSmile(canvas: Canvas) {
-    const vaoInfo = canvas.createNewVao(6);
     const textures = await canvas.loadAllTextures(TEXTURE_FILES);
     let currentTexture = DEFAULT_TEXTURE;
 
+    const smileBuffer = canvas.createBuffer(
+        'smile',
+        textures.get(currentTexture),
+    );
+
     return {
         renderSmile(x: number, y: number, size: number) {
+            if (smileBuffer !== undefined) {
+                smileBuffer.clear();
+            }
+
             return new Smile(
-                canvas,
-                vaoInfo,
+                smileBuffer.addObject,
+                smileBuffer.updateObject,
                 x,
                 y,
                 size,
-                textures.get(currentTexture),
             );
         },
 
@@ -25,8 +32,8 @@ export async function getSmile(canvas: Canvas) {
             }
         },
 
-        updateTexture(smile: Smile) {
-            smile.smileTexture = textures.get(currentTexture);
+        updateTexture() {
+            smileBuffer.updateTexture(textures.get(currentTexture));
         },
     };
 }

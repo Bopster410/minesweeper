@@ -1,45 +1,66 @@
-import { Canvas, Coords, VaoInfo } from '@/shared/canvas';
+import { Coords } from '@/shared/canvas';
 import { SmileState } from './index.types';
 import { SMILE_TEXTURE_COORDS } from '../textures';
+import { Size, SquareCoords } from '@/shared/canvas/ui/index.types';
 
 export class Smile {
-    protected canvas: Canvas;
-    protected vaoInfo: VaoInfo;
     protected size: number;
     protected coords: Coords;
     protected state: SmileState;
-    protected texture: WebGLTexture;
     protected id: string;
+    protected addToBuffer: (
+        name: string,
+        params: {
+            size: Size;
+            coords: Coords;
+            textureCoords: SquareCoords;
+        },
+    ) => void;
+    protected updateObject: (
+        name: string,
+        params: {
+            size?: Size;
+            coords?: Coords;
+            textureCoords?: SquareCoords;
+        },
+    ) => void;
 
     constructor(
-        canvas: Canvas,
-        vaoInfo: VaoInfo,
+        addToBuffer: (
+            name: string,
+            params: {
+                size: Size;
+                coords: Coords;
+                textureCoords: SquareCoords;
+            },
+        ) => void,
+        updateObject: (
+            name: string,
+            params: {
+                size?: Size;
+                coords?: Coords;
+                textureCoords?: SquareCoords;
+            },
+        ) => void,
         x: number,
         y: number,
         size: number,
-        texture: WebGLTexture,
     ) {
-        this.canvas = canvas;
-        this.vaoInfo = vaoInfo;
+        this.addToBuffer = addToBuffer;
+        this.updateObject = updateObject;
         this.size = size;
         this.coords = { x: x, y: y };
         this.state = 'default';
-        this.texture = texture;
         this.id = 'smile';
         this.renderOnCanvas();
     }
 
     protected renderOnCanvas() {
-        this.canvas.addObject(
-            this.id,
-            this.vaoInfo,
-            {
-                size: { width: this.size, height: this.size },
-                coords: this.coords,
-                textureCoords: SMILE_TEXTURE_COORDS.DEFAULT,
-            },
-            this.texture,
-        );
+        this.addToBuffer(this.id, {
+            size: { width: this.size, height: this.size },
+            coords: this.coords,
+            textureCoords: SMILE_TEXTURE_COORDS.DEFAULT,
+        });
     }
 
     protected changeState(newState: SmileState) {
@@ -47,7 +68,7 @@ export class Smile {
             return;
         }
 
-        let newTextureCoords: number[] = null;
+        let newTextureCoords: SquareCoords = null;
         switch (newState) {
             case 'pressed':
                 newTextureCoords = SMILE_TEXTURE_COORDS.DEFAULT;
@@ -66,20 +87,11 @@ export class Smile {
                 break;
         }
 
-        this.canvas.updateObject(this.id, { textureCoords: newTextureCoords });
+        this.updateObject(this.id, { textureCoords: newTextureCoords });
     }
 
     get smileCoords() {
         return this.coords;
-    }
-
-    set smileTexture(texture: WebGLTexture) {
-        this.texture = texture;
-        this.canvas.updateObject(this.id, { texture: texture });
-    }
-
-    destroy() {
-        this.canvas.removeObject(this.id);
     }
 
     setDefault() {

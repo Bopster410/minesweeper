@@ -1,4 +1,4 @@
-import { Canvas, VaoInfo } from '@/shared/canvas';
+import { Canvas } from '@/shared/canvas';
 import {
     HORIZONTAL_HEIGHT,
     TEXTURE_COORDS_BORDER,
@@ -6,327 +6,214 @@ import {
 } from '../textures';
 import { FieldBorderInfo, TopSectionInfo } from './index.types';
 import { DEFAULT_TEXTURE, TEXTURE_FILES } from './index.constants';
+import { BufferMethods } from '@/shared/canvas/ui';
 
 function renderHorizontal(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     width: number,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-horizontal[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: width },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.HORIZONTAL,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-horizontal[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: width },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.HORIZONTAL,
+    });
 
     return `border-horizontal[${x}:${y}]`;
 }
 
 function renderVertical(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     height: number,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-vertical[${x}:${y}]`,
-        vao,
-        {
-            size: { height: height, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.VERTICAL,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-vertical[${x}:${y}]`, {
+        size: { height: height, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.VERTICAL,
+    });
 
     return `border-vertical[${x}:${y}]`;
 }
 
 function renderBottomLeftCorner(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-bottom-left[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CORNER_BOTTOM_LEFT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-bottom-left[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CORNER_BOTTOM_LEFT,
+    });
 
     return `border-bottom-left[${x}:${y}]`;
 }
 
 function renderBottomRightCorner(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-bottom-right[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CORNER_BOTTOM_RIGHT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-bottom-right[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CORNER_BOTTOM_RIGHT,
+    });
 
     return `border-bottom-right[${x}:${y}]`;
 }
 function renderTopLeftCorner(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-top-left[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CORNER_TOP_LEFT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-top-left[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CORNER_TOP_LEFT,
+    });
 
     return `border-top-left[${x}:${y}]`;
 }
 
 function renderTopRightCorner(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-top-right[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CORNER_TOP_RIGHT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-top-right[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CORNER_TOP_RIGHT,
+    });
 
     return `border-top-right[${x}:${y}]`;
 }
 
 function renderLeftConnection(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-connection-left[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CONNECTION_LEFT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-connection-left[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CONNECTION_LEFT,
+    });
 
     return `border-connection-left[${x}:${y}]`;
 }
 
 function renderRightConnection(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ) {
-    canvas.addObject(
-        `border-connection-right[${x}:${y}]`,
-        vao,
-        {
-            size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
-            coords: { x: x, y: y },
-            textureCoords: TEXTURE_COORDS_BORDER.CONNECTION_RIGHT,
-        },
-        texture,
-    );
+    borderBuffer.addObject(`border-connection-right[${x}:${y}]`, {
+        size: { height: HORIZONTAL_HEIGHT, width: VERTICAL_WIDTH },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.CONNECTION_RIGHT,
+    });
 
     return `border-connection-right[${x}:${y}]`;
 }
 
 function renderFieldBorder(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     fieldHeight: number,
     width: number,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ): FieldBorderInfo {
     return {
-        blCorner: renderBottomLeftCorner(canvas, vao, x, y, texture),
+        blCorner: renderBottomLeftCorner(borderBuffer, x, y),
         verticalLeft: renderVertical(
-            canvas,
-            vao,
+            borderBuffer,
             fieldHeight,
             x,
             y + HORIZONTAL_HEIGHT,
-            texture,
         ),
 
         connectionLeft: renderLeftConnection(
-            canvas,
-            vao,
+            borderBuffer,
             x,
             y + fieldHeight + HORIZONTAL_HEIGHT,
-            texture,
         ),
 
         horizontalBottom: renderHorizontal(
-            canvas,
-            vao,
+            borderBuffer,
             width,
             x + VERTICAL_WIDTH,
             y,
-            texture,
         ),
 
         horizontalTop: renderHorizontal(
-            canvas,
-            vao,
+            borderBuffer,
             width,
             x + VERTICAL_WIDTH,
             y + fieldHeight + HORIZONTAL_HEIGHT,
-            texture,
         ),
 
         connectionRight: renderRightConnection(
-            canvas,
-            vao,
+            borderBuffer,
             x + VERTICAL_WIDTH + width,
             y + fieldHeight + HORIZONTAL_HEIGHT,
-            texture,
         ),
 
         verticalRight: renderVertical(
-            canvas,
-            vao,
+            borderBuffer,
             fieldHeight,
             x + VERTICAL_WIDTH + width,
             y + HORIZONTAL_HEIGHT,
-            texture,
         ),
 
         brCornenr: renderBottomRightCorner(
-            canvas,
-            vao,
+            borderBuffer,
             x + VERTICAL_WIDTH + width,
             y,
-            texture,
         ),
     };
 }
 
 function renderTopSection(
-    canvas: Canvas,
-    vao: VaoInfo,
+    borderBuffer: BufferMethods,
     topSectionHeight: number,
     width: number,
     x: number,
     y: number,
-    texture: WebGLTexture,
 ): TopSectionInfo {
     return {
-        verticalLeft: renderVertical(
-            canvas,
-            vao,
-            topSectionHeight,
-            x,
-            y,
-            texture,
-        ),
-        tlCorner: renderTopLeftCorner(
-            canvas,
-            vao,
-            x,
-            y + topSectionHeight,
-            texture,
-        ),
+        verticalLeft: renderVertical(borderBuffer, topSectionHeight, x, y),
+        tlCorner: renderTopLeftCorner(borderBuffer, x, y + topSectionHeight),
         horizontalBottom: renderHorizontal(
-            canvas,
-            vao,
+            borderBuffer,
             width,
             x + VERTICAL_WIDTH,
             y + topSectionHeight,
-            texture,
         ),
         verticalRight: renderVertical(
-            canvas,
-            vao,
+            borderBuffer,
             topSectionHeight,
             x + VERTICAL_WIDTH + width,
             y,
-            texture,
         ),
 
         trCorner: renderTopRightCorner(
-            canvas,
-            vao,
+            borderBuffer,
             x + VERTICAL_WIDTH + width,
             y + topSectionHeight,
-            texture,
         ),
     };
 }
 
-function clearFieldBorder(canvas: Canvas, info: FieldBorderInfo) {
-    canvas.removeObject(info.blCorner);
-    canvas.removeObject(info.brCornenr);
-    canvas.removeObject(info.connectionLeft);
-    canvas.removeObject(info.connectionRight);
-    canvas.removeObject(info.horizontalBottom);
-    canvas.removeObject(info.horizontalTop);
-    canvas.removeObject(info.verticalLeft);
-    canvas.removeObject(info.verticalRight);
-}
-
-function clearTopSectionBorder(canvas: Canvas, info: TopSectionInfo) {
-    canvas.removeObject(info.horizontalBottom);
-    canvas.removeObject(info.tlCorner);
-    canvas.removeObject(info.trCorner);
-    canvas.removeObject(info.verticalLeft);
-    canvas.removeObject(info.verticalRight);
-}
-
 function renderBorder(
-    canvas: Canvas,
     width: number,
     fieldHeight: number,
     topSectionHeight: number,
-    borderVao: VaoInfo,
-    texture: WebGLTexture,
+    borderBuffer: BufferMethods,
 ) {
     return {
         fieldX: VERTICAL_WIDTH,
@@ -334,22 +221,18 @@ function renderBorder(
         topSectionX: VERTICAL_WIDTH,
         topSectionY: HORIZONTAL_HEIGHT * 2 + fieldHeight,
         fieldBorderInfo: renderFieldBorder(
-            canvas,
-            borderVao,
+            borderBuffer,
             fieldHeight,
             width,
             0,
             0,
-            texture,
         ),
         topSectionInfo: renderTopSection(
-            canvas,
-            borderVao,
+            borderBuffer,
             topSectionHeight,
             width,
             0,
             HORIZONTAL_HEIGHT * 2 + fieldHeight,
-            texture,
         ),
     };
 }
@@ -358,7 +241,10 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
     const textures = await canvas.loadAllTextures(TEXTURE_FILES);
     let currentTexture = DEFAULT_TEXTURE;
 
-    const borderVao = canvas.createNewVao(6);
+    const borderBuffer = canvas.createBuffer(
+        'border',
+        textures.get(currentTexture),
+    );
 
     let info: {
         fieldX: number;
@@ -372,17 +258,14 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
     return {
         renderBorder: (newWidth: number, newFieldHeight: number) => {
             if (info !== undefined) {
-                clearFieldBorder(canvas, info.fieldBorderInfo);
-                clearTopSectionBorder(canvas, info.topSectionInfo);
+                borderBuffer.clear();
             }
 
             info = renderBorder(
-                canvas,
                 newWidth,
                 newFieldHeight,
                 topSectionHeight,
-                borderVao,
-                textures.get(currentTexture),
+                borderBuffer,
             );
 
             return {
@@ -400,17 +283,7 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
         },
 
         updateTexture() {
-            Object.values(info.fieldBorderInfo).forEach((name) => {
-                canvas.updateObject(name, {
-                    texture: textures.get(currentTexture),
-                });
-            });
-
-            Object.values(info.topSectionInfo).forEach((name) => {
-                canvas.updateObject(name, {
-                    texture: textures.get(currentTexture),
-                });
-            });
+            borderBuffer.updateTexture(textures.get(currentTexture));
         },
 
         width: () => 2 * VERTICAL_WIDTH,

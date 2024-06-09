@@ -27,7 +27,7 @@ export class ChooseSizeMenu extends Component<
                 const inputTarget = target as HTMLInputElement;
                 inputTarget.value =
                     inputTarget.value.slice(0, -1) +
-                    (isNaN(Number(e.data)) ? '' : e.data);
+                    (e.data === ' ' || isNaN(Number(e.data)) ? '' : e.data);
             }
         });
     }

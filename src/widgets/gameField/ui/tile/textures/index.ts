@@ -1,19 +1,263 @@
+import { SquareCoords } from '@/shared/canvas/ui/index.types';
 import './tiletextures.png';
 import './tiletextures2.png';
 
-export const TILE_TEXTURE_COORDS = {
-    EMPTY: [0, 1, 0, 0.75, 0.25, 0.75, 0.25, 0.75, 0.25, 1, 0, 1],
-    ONE: [0.25, 1, 0.25, 0.75, 0.5, 0.75, 0.5, 0.75, 0.5, 1, 0.25, 1],
-    TWO: [0.5, 1, 0.5, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 1, 0.5, 1],
-    THREE: [0.75, 1, 0.75, 0.75, 1, 0.75, 1, 0.75, 1, 1, 0.75, 1],
-    FOUR: [0, 0.75, 0, 0.5, 0.25, 0.5, 0.25, 0.5, 0.25, 0.75, 0, 0.75],
-    FIVE: [0.25, 0.75, 0.25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.75, 0.25, 0.75],
-    SIX: [0.5, 0.75, 0.5, 0.5, 0.75, 0.5, 0.75, 0.5, 0.75, 0.75, 0.5, 0.75],
-    SEVEN: [0.75, 0.75, 0.75, 0.5, 1, 0.5, 1, 0.5, 1, 0.75, 0.75, 0.75],
-    EIGHT: [0, 0.5, 0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5, 0, 0.5],
-    CLOSED: [0.25, 0.5, 0.25, 0.25, 0.5, 0.25, 0.5, 0.25, 0.5, 0.5, 0.25, 0.5],
-    FLAG: [0.5, 0.5, 0.5, 0.25, 0.75, 0.25, 0.75, 0.25, 0.75, 0.5, 0.5, 0.5],
-    FLAG_WRONG: [0.75, 0.5, 0.75, 0.25, 1, 0.25, 1, 0.25, 1, 0.5, 0.75, 0.5],
+export const TILE_TEXTURE_COORDS_OLD = {
     BOMB: [0, 0.25, 0, 0, 0.25, 0, 0.25, 0, 0.25, 0.25, 0, 0.25],
     BOMB_WRONG: [0.25, 0.25, 0.25, 0, 0.5, 0, 0.5, 0, 0.5, 0.25, 0.25, 0.25],
+};
+
+export const TILE_TEXTURE_COORDS: { [name: string]: SquareCoords } = {
+    EMPTY: {
+        topLeft: {
+            x: 0,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0,
+            y: 0.75,
+        },
+        bottomRight: {
+            x: 0.25,
+            y: 0.75,
+        },
+        topRight: {
+            x: 0.25,
+            y: 1,
+        },
+    },
+    ONE: {
+        topLeft: {
+            x: 0.25,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.25,
+            y: 0.75,
+        },
+        bottomRight: {
+            x: 0.5,
+            y: 0.75,
+        },
+        topRight: {
+            x: 0.5,
+            y: 1,
+        },
+    },
+    TWO: {
+        topLeft: {
+            x: 0.5,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.5,
+            y: 0.75,
+        },
+        bottomRight: {
+            x: 0.75,
+            y: 0.75,
+        },
+        topRight: {
+            x: 0.75,
+            y: 1,
+        },
+    },
+    THREE: {
+        topLeft: {
+            x: 0.75,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.75,
+            y: 0.75,
+        },
+        bottomRight: {
+            x: 1,
+            y: 0.75,
+        },
+        topRight: {
+            x: 1,
+            y: 1,
+        },
+    },
+    FOUR: {
+        topLeft: {
+            x: 0,
+            y: 0.75,
+        },
+        bottomLeft: {
+            x: 0,
+            y: 0.5,
+        },
+        bottomRight: {
+            x: 0.25,
+            y: 0.5,
+        },
+        topRight: {
+            x: 0.25,
+            y: 0.75,
+        },
+    },
+    FIVE: {
+        topLeft: {
+            x: 0.25,
+            y: 0.75,
+        },
+        bottomLeft: {
+            x: 0.25,
+            y: 0.5,
+        },
+        bottomRight: {
+            x: 0.5,
+            y: 0.5,
+        },
+        topRight: {
+            x: 0.5,
+            y: 0.75,
+        },
+    },
+    SIX: {
+        topLeft: {
+            x: 0.5,
+            y: 0.75,
+        },
+        bottomLeft: {
+            x: 0.5,
+            y: 0.5,
+        },
+        bottomRight: {
+            x: 0.75,
+            y: 0.5,
+        },
+        topRight: {
+            x: 0.75,
+            y: 0.75,
+        },
+    },
+    SEVEN: {
+        topLeft: {
+            x: 0.75,
+            y: 0.75,
+        },
+        bottomLeft: {
+            x: 0.75,
+            y: 0.5,
+        },
+        bottomRight: {
+            x: 1,
+            y: 0.5,
+        },
+        topRight: {
+            x: 1,
+            y: 0.75,
+        },
+    },
+    EIGHT: {
+        topLeft: {
+            x: 0,
+            y: 0.5,
+        },
+        bottomLeft: {
+            x: 0,
+            y: 0.25,
+        },
+        bottomRight: {
+            x: 0.25,
+            y: 0.25,
+        },
+        topRight: {
+            x: 0.25,
+            y: 0.5,
+        },
+    },
+    CLOSED: {
+        topLeft: {
+            x: 0.25,
+            y: 0.5,
+        },
+        bottomLeft: {
+            x: 0.25,
+            y: 0.25,
+        },
+        bottomRight: {
+            x: 0.5,
+            y: 0.25,
+        },
+        topRight: {
+            x: 0.5,
+            y: 0.5,
+        },
+    },
+    FLAG: {
+        topLeft: {
+            x: 0.5,
+            y: 0.5,
+        },
+        bottomLeft: {
+            x: 0.5,
+            y: 0.25,
+        },
+        bottomRight: {
+            x: 0.75,
+            y: 0.25,
+        },
+        topRight: {
+            x: 0.75,
+            y: 0.5,
+        },
+    },
+    FLAG_WRONG: {
+        topLeft: {
+            x: 0.75,
+            y: 0.5,
+        },
+        bottomLeft: {
+            x: 0.75,
+            y: 0.25,
+        },
+        bottomRight: {
+            x: 1,
+            y: 0.25,
+        },
+        topRight: {
+            x: 1,
+            y: 0.5,
+        },
+    },
+    BOMB: {
+        topLeft: {
+            x: 0,
+            y: 0.25,
+        },
+        bottomLeft: {
+            x: 0,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.25,
+            y: 0,
+        },
+        topRight: {
+            x: 0.25,
+            y: 0.25,
+        },
+    },
+    BOMB_WRONG: {
+        topLeft: {
+            x: 0.25,
+            y: 0.25,
+        },
+        bottomLeft: {
+            x: 0.25,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.5,
+            y: 0,
+        },
+        topRight: {
+            x: 0.5,
+            y: 0.25,
+        },
+    },
 };

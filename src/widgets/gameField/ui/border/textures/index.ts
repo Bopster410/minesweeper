@@ -1,17 +1,152 @@
+import { SquareCoords } from '@/shared/canvas/ui/index.types';
 import './textureborder.png';
 import './textureborder2.png';
 
-export const TEXTURE_COORDS_BORDER = {
-    CORNER_TOP_LEFT: [0, 1, 0, 0, 0.125, 0, 0.125, 0, 0.125, 1, 0, 1],
-    CORNER_TOP_RIGHT: [0.125, 1, 0.125, 0, 0.25, 0, 0.25, 0, 0.25, 1, 0.125, 1],
-    CORNER_BOTTOM_LEFT: [
-        0.25, 1, 0.25, 0, 0.375, 0, 0.375, 0, 0.375, 1, 0.25, 1,
-    ],
-    CORNER_BOTTOM_RIGHT: [0.375, 1, 0.375, 0, 0.5, 0, 0.5, 0, 0.5, 1, 0.375, 1],
-    HORIZONTAL: [0.5, 1, 0.5, 0, 0.625, 0, 0.625, 0, 0.625, 1, 0.5, 1],
-    CONNECTION_LEFT: [0.625, 1, 0.625, 0, 0.75, 0, 0.75, 0, 0.75, 1, 0.625, 1],
-    CONNECTION_RIGHT: [0.75, 1, 0.75, 0, 0.875, 0, 0.875, 0, 0.875, 1, 0.75, 1],
-    VERTICAL: [0.875, 1, 0.875, 0, 1, 0, 1, 0, 1, 1, 0.875, 1],
+export const TEXTURE_COORDS_BORDER: { [name: string]: SquareCoords } = {
+    CORNER_TOP_LEFT: {
+        topLeft: {
+            x: 0,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.125,
+            y: 0,
+        },
+        topRight: {
+            x: 0.125,
+            y: 1,
+        },
+    },
+    CORNER_TOP_RIGHT: {
+        topLeft: {
+            x: 0.125,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.125,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.25,
+            y: 0,
+        },
+        topRight: {
+            x: 0.25,
+            y: 1,
+        },
+    },
+    CORNER_BOTTOM_LEFT: {
+        topLeft: {
+            x: 0.25,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.25,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.375,
+            y: 0,
+        },
+        topRight: {
+            x: 0.375,
+            y: 1,
+        },
+    },
+    CORNER_BOTTOM_RIGHT: {
+        topLeft: {
+            x: 0.375,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.375,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.5,
+            y: 0,
+        },
+        topRight: {
+            x: 0.5,
+            y: 1,
+        },
+    },
+    HORIZONTAL: {
+        topLeft: {
+            x: 0.5,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.5,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.625,
+            y: 0,
+        },
+        topRight: {
+            x: 0.625,
+            y: 1,
+        },
+    },
+    CONNECTION_LEFT: {
+        topLeft: {
+            x: 0.625,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.625,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.75,
+            y: 0,
+        },
+        topRight: {
+            x: 0.75,
+            y: 1,
+        },
+    },
+    CONNECTION_RIGHT: {
+        topLeft: {
+            x: 0.75,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.75,
+            y: 0,
+        },
+        bottomRight: {
+            x: 0.875,
+            y: 0,
+        },
+        topRight: {
+            x: 0.875,
+            y: 1,
+        },
+    },
+    VERTICAL: {
+        topLeft: {
+            x: 0.875,
+            y: 1,
+        },
+        bottomLeft: {
+            x: 0.875,
+            y: 0,
+        },
+        bottomRight: {
+            x: 1,
+            y: 0,
+        },
+        topRight: {
+            x: 1,
+            y: 1,
+        },
+    },
 };
 
 export const VERTICAL_WIDTH = 10;

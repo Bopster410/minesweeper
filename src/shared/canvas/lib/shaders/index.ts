@@ -25,26 +25,31 @@ export function initProgram(gl: WebGL2RenderingContext) {
         'vertTextureCoords',
     );
 
+    const coordsAttributeLocation = gl.getAttribLocation(program, 'coords');
+
+    const sizeAttributeLocation = gl.getAttribLocation(program, 'size');
+
     if (vertexPositionAttributeLocation < 0) {
         console.error(`Failed to get attribute location`);
         return;
     }
+    if (textureAttributeLocation < 0) {
+        console.error(`Failed to get texture attribute location`);
+        return;
+    }
+    if (coordsAttributeLocation < 0) {
+        console.error(`Failed to get coords attribute location`);
+        return;
+    }
+    if (sizeAttributeLocation < 0) {
+        console.error(`Failed to get size attribute location`);
+        return;
+    }
 
-    const coordsUniform = gl.getUniformLocation(program, 'coords');
-    const sizeUniform = gl.getUniformLocation(program, 'size');
     const canvasSizeUniform = gl.getUniformLocation(program, 'canvasSize');
 
-    if (
-        coordsUniform === null ||
-        sizeUniform === null ||
-        canvasSizeUniform === null
-    ) {
-        console.error(
-            `Failed to get uniforms location`,
-            `coords: ${coordsUniform !== null}`,
-            `size: ${sizeUniform !== null}`,
-            `canvasSize: ${canvasSizeUniform !== null}`,
-        );
+    if (canvasSizeUniform === null) {
+        console.error(`Failed to get uniforms location`);
         return;
     }
 
@@ -54,8 +59,8 @@ export function initProgram(gl: WebGL2RenderingContext) {
         fragmentShader: fragmentShader,
         positionAttrLocation: vertexPositionAttributeLocation,
         textureAttrLocation: textureAttributeLocation,
-        coordsUniform: coordsUniform,
-        sizeUniform: sizeUniform,
+        coordsAttributeLocation: coordsAttributeLocation,
+        sizeAttributeLocation: sizeAttributeLocation,
         canvasSizeUniform: canvasSizeUniform,
     };
 }

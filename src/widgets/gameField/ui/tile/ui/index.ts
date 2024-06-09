@@ -1,7 +1,7 @@
-import { Canvas, VaoInfo } from '@/shared/canvas';
 import { TileState, TileType } from './index.types';
 import { generateTileId } from '../lib';
 import { TILE_TEXTURE_COORDS } from '../textures';
+import { Coords, Size, SquareCoords } from '@/shared/canvas/ui/index.types';
 
 export type { TileState, TileType } from './index.types';
 
@@ -14,23 +14,51 @@ export class Tile {
     };
     protected size: number;
     protected coordsId: string;
-    protected canvas: Canvas;
-    protected vaoInfo: VaoInfo;
-    protected texture: WebGLTexture;
     protected bombsAround?: number;
+    protected addToBuffer: (
+        name: string,
+        params: {
+            size: Size;
+            coords: Coords;
+            textureCoords: SquareCoords;
+        },
+    ) => void;
+    protected updateObject: (
+        name: string,
+        params: {
+            size?: Size;
+            coords?: Coords;
+            textureCoords?: SquareCoords;
+        },
+    ) => void;
 
     constructor(
-        canvas: Canvas,
-        vaoInfo: VaoInfo,
+        addToBuffer: (
+            name: string,
+            params: {
+                size: Size;
+                coords: Coords;
+                textureCoords: SquareCoords;
+            },
+        ) => void,
+        updateObject: (
+            name: string,
+            params: {
+                size?: Size;
+                coords?: Coords;
+                textureCoords?: SquareCoords;
+            },
+        ) => void,
         x: number,
         y: number,
         size: number,
         state: TileState,
         type: TileType,
-        texture: WebGLTexture,
         bombsAround?: number,
     ) {
         this.state = state;
+        this.addToBuffer = addToBuffer;
+        this.updateObject = updateObject;
         this.type = type;
         this.coords = {
             x: x,
@@ -38,24 +66,16 @@ export class Tile {
         };
         this.size = size;
         this.coordsId = generateTileId(x, y);
-        this.canvas = canvas;
-        this.vaoInfo = vaoInfo;
-        this.texture = texture;
         this.bombsAround = bombsAround;
         this.renderOnCanvas();
     }
 
     protected renderOnCanvas() {
-        this.canvas.addObject(
-            this.coordsId,
-            this.vaoInfo,
-            {
-                size: { width: this.size, height: this.size },
-                coords: this.coords,
-                textureCoords: TILE_TEXTURE_COORDS.CLOSED,
-            },
-            this.texture,
-        );
+        this.addToBuffer(this.coordsId, {
+            size: { width: this.size, height: this.size },
+            coords: this.coords,
+            textureCoords: TILE_TEXTURE_COORDS.CLOSED,
+        });
     }
 
     get tileCoords() {
@@ -74,13 +94,8 @@ export class Tile {
         return this.state;
     }
 
-    set tileTexture(texture: WebGLTexture) {
-        this.texture = texture;
-        this.canvas.updateObject(this.id, { texture: texture });
-    }
-
     protected updateTextureCoords() {
-        let newTextureCoords: number[] = null;
+        let newTextureCoords: SquareCoords = null;
         if (this.state === 'opened') {
             switch (this.type) {
                 case 'exploded':
@@ -137,7 +152,7 @@ export class Tile {
             newTextureCoords = TILE_TEXTURE_COORDS.FLAG_WRONG;
         }
 
-        this.canvas.updateObject(this.coordsId, {
+        this.updateObject(this.coordsId, {
             textureCoords: newTextureCoords,
         });
     }
