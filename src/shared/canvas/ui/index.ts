@@ -1,7 +1,14 @@
 import canvasTmpl from './index.template.pug';
 import './index.style.scss';
 import { Component } from '@/shared/@types/index.component';
-import { CanvasProps, Coords, Size, SquareCoords } from './index.types';
+import {
+    BufferMethods,
+    CanvasProps,
+    Coords,
+    RenderingBufferInfo,
+    Size,
+    SquareCoords,
+} from './index.types';
 import {
     bufferStaticData,
     clearBuffers,
@@ -13,59 +20,26 @@ import {
     unBindBuffer,
 } from '../lib';
 import { Color } from '../lib/index.types';
+import { MOUSE_SENSIVITY } from './index.constants';
+import {
+    TOTAL_VERTICES,
+    STEP,
+    TOTAL_VERTEX_VALUES,
+    OFFSET,
+    DATA_SIZE,
+} from './index.constants';
 
 export type { Coords } from './index.types';
+
+export type { BufferMethods };
 export type VaoInfo = {
     vao: WebGLVertexArrayObject;
     totalVertices: number;
     textureData: Float32Array;
     textureBuffer: WebGLBuffer;
 };
-export type ObjectInfo = {
-    index: number;
-    coords: Coords;
-    size: Size;
-    textureCoords: SquareCoords;
-};
-export type RenderingBufferInfo = {
-    bufferValues: number[];
-    texture: WebGLTexture;
-    objects: Map<string, ObjectInfo>;
-};
-export type BufferMethods = {
-    addObject: (
-        name: string,
-        params: {
-            size: Size;
-            coords: Coords;
-            textureCoords: SquareCoords;
-        },
-    ) => void;
-    updateObject: (
-        name: string,
-        params: {
-            size?: Size;
-            coords?: Coords;
-            textureCoords?: SquareCoords;
-        },
-    ) => void;
-    updateTexture: (texture: WebGLTexture) => void;
-    clear: () => void;
-};
 
-const TOTAL_VERTICES = 6;
-const TOTAL_VERTEX_VALUES = 8;
-const STEP = TOTAL_VERTICES * TOTAL_VERTEX_VALUES;
-const OFFSET = {
-    TEXTURE_X: 2,
-    TEXTURE_Y: 3,
-    X: 4,
-    Y: 5,
-    WIDTH: 6,
-    HEIGHT: 7,
-};
-
-const DATA_SIZE = 4;
+export type Position = 'fixed' | 'static';
 
 export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
     protected gl: WebGL2RenderingContext;
@@ -77,13 +51,43 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
     protected vertexShader: WebGLShader;
     protected fragmentShader: WebGLShader;
     protected canvasSizeUniform: WebGLUniformLocation;
+    protected offsetUniform: WebGLUniformLocation;
+    protected zIndexUniform: WebGLUniformLocation;
     protected renderingBuffers: Map<string, RenderingBufferInfo>;
     protected drawBuffer: WebGLBuffer;
+    protected lastMouseCoords: Coords;
+    protected offset: Coords;
+    protected lastMouseMove: boolean;
+    protected firstMouseCoords: Coords;
 
     constructor(parent: Element, props: CanvasProps) {
         super(parent, canvasTmpl, props);
+        this.props.scenePosition = this.props.scenePosition ?? {
+            coords: {
+                x: 0,
+                y: 0,
+            },
+            size: {
+                width: props.width,
+                height: props.height,
+            },
+        };
+        this.props.visiblePartPosition = this.props.visiblePartPosition ?? {
+            coords: {
+                x: 0,
+                y: 0,
+            },
+            size: {
+                width: props.width,
+                height: props.height,
+            },
+        };
         this.renderingBuffers = new Map();
+        this.lastMouseCoords = null;
+        this.firstMouseCoords = null;
+        this.clearOffset();
         this.initWebGL();
+        this.componentDidMount();
     }
 
     protected initWebGL() {
@@ -97,7 +101,11 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         this.coordsAttributeLocation = data.coordsAttributeLocation;
         this.sizeAttributeLocation = data.sizeAttributeLocation;
         this.canvasSizeUniform = data.canvasSizeUniform;
+        this.offsetUniform = data.offsetUniform;
+        this.zIndexUniform = data.zIndexUniform;
         this.drawBuffer = this.gl.createBuffer();
+
+        this.gl.enable(this.gl.DEPTH_TEST);
 
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -106,13 +114,112 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         this.htmlElement.height = this.htmlElement.clientHeight;
     }
 
-    protected addNewBuffer(bufferName: string, texture: WebGLTexture) {
+    protected componentDidMount() {
+        this.htmlElement.addEventListener('mousedown', (e) => {
+            this.firstMouseCoords = {
+                x: e.offsetX,
+                y: e.offsetY,
+            };
+            this.lastMouseCoords = {
+                x: e.offsetX,
+                y: e.offsetY,
+            };
+        });
+
+        this.htmlElement.addEventListener('mousemove', (e) => {
+            if (this.firstMouseCoords === null) {
+                return;
+            }
+
+            const x = (e.offsetX - this.lastMouseCoords.x) * MOUSE_SENSIVITY.x;
+            this.offset.x +=
+                this.offset.x + x < 0 &&
+                this.props.scenePosition.coords.x +
+                    this.props.scenePosition.size.width +
+                    this.offset.x +
+                    x >=
+                    this.props.visiblePartPosition.coords.x +
+                        this.props.visiblePartPosition.size.width
+                    ? x
+                    : 0;
+
+            const y = (this.lastMouseCoords.y - e.offsetY) * MOUSE_SENSIVITY.y;
+            this.offset.y +=
+                this.offset.y + y < 0 &&
+                this.props.scenePosition.coords.y +
+                    this.props.scenePosition.size.height +
+                    this.offset.y +
+                    y >=
+                    this.props.visiblePartPosition.coords.y +
+                        this.props.visiblePartPosition.size.height
+                    ? y
+                    : 0;
+
+            this.lastMouseCoords = {
+                x: e.offsetX,
+                y: e.offsetY,
+            };
+        });
+
+        this.htmlElement.addEventListener('mouseleave', () => {
+            this.lastMouseCoords = null;
+            this.firstMouseCoords = null;
+            this.lastMouseMove = true;
+        });
+
+        this.htmlElement.addEventListener('mouseup', (e) => {
+            if (this.firstMouseCoords === null) {
+                this.lastMouseMove = false;
+                return;
+            }
+
+            this.lastMouseMove =
+                Math.abs(e.offsetX - this.firstMouseCoords.x) > 1 ||
+                Math.abs(e.offsetY - this.firstMouseCoords.y) > 1;
+            this.lastMouseCoords = null;
+            this.firstMouseCoords = null;
+        });
+    }
+
+    get mouseMoved() {
+        return this.lastMouseMove;
+    }
+
+    get sceneOffset() {
+        return this.offset;
+    }
+
+    clearOffset() {
+        this.offset = {
+            x: 0,
+            y: 0,
+        };
+    }
+
+    setScenePosition(coords: Coords, size: Size) {
+        this.props.scenePosition.coords = coords;
+        this.props.scenePosition.size = size;
+    }
+
+    setVisiblePosition(coords: Coords, size: Size) {
+        this.props.visiblePartPosition.coords = coords;
+        this.props.visiblePartPosition.size = size;
+    }
+
+    protected addNewBuffer(
+        bufferName: string,
+        texture: WebGLTexture,
+        position?: Position,
+        zIndex?: number,
+    ) {
         if (this.renderingBuffers.has(bufferName)) return false;
 
         this.renderingBuffers.set(bufferName, {
             bufferValues: [],
             texture: texture,
             objects: new Map(),
+            position: position ?? 'fixed',
+            zIndex: zIndex ?? 0.0,
         });
 
         return true;
@@ -142,59 +249,58 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         });
 
         for (let i = 0; i < quantity; i++) {
-            this.renderingBuffers.get(bufferName).bufferValues =
-                this.renderingBuffers
-                    .get(bufferName)
-                    .bufferValues.concat([
-                        -1,
-                        1,
-                        params.textureCoords.topLeft.x,
-                        params.textureCoords.topLeft.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                        -1,
-                        -1,
-                        params.textureCoords.bottomLeft.x,
-                        params.textureCoords.bottomLeft.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                        1,
-                        -1,
-                        params.textureCoords.bottomRight.x,
-                        params.textureCoords.bottomRight.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                        1,
-                        -1,
-                        params.textureCoords.bottomRight.x,
-                        params.textureCoords.bottomRight.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                        1,
-                        1,
-                        params.textureCoords.topRight.x,
-                        params.textureCoords.topRight.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                        -1,
-                        1,
-                        params.textureCoords.topLeft.x,
-                        params.textureCoords.topLeft.y,
-                        params.coords.x,
-                        params.coords.y,
-                        params.size.width,
-                        params.size.height,
-                    ]);
+            this.renderingBuffers
+                .get(bufferName)
+                .bufferValues.push(
+                    -1,
+                    1,
+                    params.textureCoords.topLeft.x,
+                    params.textureCoords.topLeft.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                    -1,
+                    -1,
+                    params.textureCoords.bottomLeft.x,
+                    params.textureCoords.bottomLeft.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                    1,
+                    -1,
+                    params.textureCoords.bottomRight.x,
+                    params.textureCoords.bottomRight.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                    1,
+                    -1,
+                    params.textureCoords.bottomRight.x,
+                    params.textureCoords.bottomRight.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                    1,
+                    1,
+                    params.textureCoords.topRight.x,
+                    params.textureCoords.topRight.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                    -1,
+                    1,
+                    params.textureCoords.topLeft.x,
+                    params.textureCoords.topLeft.y,
+                    params.coords.x,
+                    params.coords.y,
+                    params.size.width,
+                    params.size.height,
+                );
         }
     }
 
@@ -409,8 +515,14 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
     }
 
     // Creates new buffer and public methods to work with it
-    createBuffer(bufferName: string, texture: WebGLTexture): BufferMethods {
-        if (!this.addNewBuffer(bufferName, texture)) return null;
+    createBuffer(
+        bufferName: string,
+        texture: WebGLTexture,
+        position?: Position,
+        zIndex?: number,
+    ): BufferMethods {
+        if (!this.addNewBuffer(bufferName, texture, position, zIndex))
+            return null;
 
         return {
             addObject: (
@@ -451,8 +563,6 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
     }
 
     draw() {
-        const start = Date.now();
-
         fullCanvasViewport(this.gl, this.htmlElement);
         this.gl.useProgram(this.program);
         this.clear();
@@ -464,7 +574,14 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         );
 
         this.renderingBuffers.forEach((info) => {
-            // console.log(info);
+            this.gl.uniform2f(
+                this.offsetUniform,
+                info.position === 'fixed' ? 0 : this.offset.x,
+                info.position === 'fixed' ? 0 : this.offset.y,
+            );
+
+            this.gl.uniform1f(this.zIndexUniform, info.zIndex);
+
             bufferStaticData(
                 this.gl,
                 this.drawBuffer,
@@ -518,8 +635,6 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
             );
             unBindBuffer(this.gl);
         });
-
-        // console.log('draw(): ', Date.now() - start);
     }
 
     clearColor(color?: Color) {

@@ -136,6 +136,8 @@ export class App extends Component<HTMLDivElement> {
                     this.updateSize(params);
                 }
 
+                data.drawField();
+
                 this.componentDidMount();
             })
             .catch((e) => {

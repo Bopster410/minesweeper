@@ -15,7 +15,12 @@ export async function getNewTile(canvas: Canvas) {
     let tileBuffer: BufferMethods = null;
 
     const createVao = () => {
-        tileBuffer = canvas.createBuffer('tiles', textures.get(currentTexture));
+        tileBuffer = canvas.createBuffer(
+            'tiles',
+            textures.get(currentTexture),
+            'static',
+            -0.1,
+        );
     };
 
     const addNewTile = (

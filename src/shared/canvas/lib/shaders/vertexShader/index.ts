@@ -7,16 +7,18 @@ in vec2 coords;
 in vec2 size;
 
 uniform vec2 canvasSize;
+uniform vec2 offset;
+uniform float zIndex;
 
 out vec2 fragTextureCoords;
 
 void main() {
     fragTextureCoords = vertTextureCoords;
 
-    vec2 finalPosition = vertexPosition * (size / 2.0) + coords + (size / 2.0);
+    vec2 finalPosition = vertexPosition * (size / 2.0) + coords + (size / 2.0) + offset;
     vec2 clipPosition = (finalPosition / canvasSize) * 2.0 - 1.0;
 
-    gl_Position = vec4(clipPosition, 0.0, 1.0);
+    gl_Position = vec4(clipPosition, zIndex, 1.0);
 }`;
 
 // Creates and compiles vertex shader
