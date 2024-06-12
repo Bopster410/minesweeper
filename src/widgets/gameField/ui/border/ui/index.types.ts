@@ -15,4 +15,5 @@ export type TopSectionInfo = {
     horizontalBottom: string;
     verticalRight: string;
     trCorner: string;
+    background: string;
 };

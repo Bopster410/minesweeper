@@ -49,7 +49,20 @@ export function initProgram(gl: WebGL2RenderingContext) {
     const canvasSizeUniform = gl.getUniformLocation(program, 'canvasSize');
 
     if (canvasSizeUniform === null) {
-        console.error(`Failed to get uniforms location`);
+        console.error(`Failed to get canvas uniform location`);
+        return;
+    }
+
+    const offsetUniform = gl.getUniformLocation(program, 'offset');
+
+    if (offsetUniform === null) {
+        console.error(`Failed to get offset uniforms location`);
+        return;
+    }
+    const zIndexUniform = gl.getUniformLocation(program, 'zIndex');
+
+    if (zIndexUniform === null) {
+        console.error(`Failed to get zIndex uniforms location`);
         return;
     }
 
@@ -62,6 +75,8 @@ export function initProgram(gl: WebGL2RenderingContext) {
         coordsAttributeLocation: coordsAttributeLocation,
         sizeAttributeLocation: sizeAttributeLocation,
         canvasSizeUniform: canvasSizeUniform,
+        offsetUniform: offsetUniform,
+        zIndexUniform: zIndexUniform,
     };
 }
 

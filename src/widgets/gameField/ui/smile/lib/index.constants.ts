@@ -4,4 +4,5 @@ export const TEXTURE_FILES = {
     default: './texturesmile.png',
     forest: './texturesmile2.png',
     mine: './texturesmile_mine.png',
+    forest2: './texturesmile_forest.png',
 };
