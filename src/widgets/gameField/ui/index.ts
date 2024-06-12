@@ -524,8 +524,8 @@ export async function getGameFieldCanvas(
 
             const clickCoords = getClickedCoords(
                 e,
-                positions.field.x - canvas.sceneOffset.x,
-                positions.field.y - canvas.sceneOffset.y,
+                positions.field.x + canvas.sceneOffset.x,
+                positions.field.y + canvas.sceneOffset.y,
                 canvas.height,
                 tileSize,
             );
@@ -559,36 +559,38 @@ export async function getGameFieldCanvas(
                     height,
                 );
 
-                isLoading = true;
+                if (result) {
+                    isLoading = true;
 
-                setTimeout(() => {
-                    if (isLoading) {
-                        cursor.setCursorLoading();
+                    setTimeout(() => {
+                        if (isLoading) {
+                            cursor.setCursorLoading();
+                        }
+                    }, 200);
+
+                    result.openTilesDb
+                        .then(() => {
+                            isLoading = false;
+                            cursor.setCursorDefault();
+                        })
+                        .catch(() => {});
+
+                    if (result === null) {
+                        return;
                     }
-                }, 200);
 
-                result.openTilesDb
-                    .then(() => {
-                        isLoading = false;
-                        cursor.setCursorDefault();
-                    })
-                    .catch(() => {});
+                    if (result.openedType === 'bomb') {
+                        openBombs(tiles, bobmsPositions, renderingArea);
+                        openFlags(tiles, flagsPositions, renderingArea);
+                        gameStateMethods.setStatus('defeat');
+                    }
 
-                if (result === null) {
-                    return;
-                }
-
-                if (result?.openedType === 'bomb') {
-                    openBombs(tiles, bobmsPositions, renderingArea);
-                    openFlags(tiles, flagsPositions, renderingArea);
-                    gameStateMethods.setStatus('defeat');
-                }
-
-                if (result?.openedType !== 'bomb') {
-                    gameStateMethods.setNoBombsFields(
-                        gameStateMethods.getNoBombsFields() -
-                            result.totalOpened,
-                    );
+                    if (result.openedType !== 'bomb') {
+                        gameStateMethods.setNoBombsFields(
+                            gameStateMethods.getNoBombsFields() -
+                                result.totalOpened,
+                        );
+                    }
                 }
             }
         }
