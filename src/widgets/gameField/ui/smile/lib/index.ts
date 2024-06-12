@@ -9,6 +9,8 @@ export async function getSmile(canvas: Canvas) {
     const smileBuffer = canvas.createBuffer(
         'smile',
         textures.get(currentTexture),
+        'fixed',
+        -1.0,
     );
 
     return {

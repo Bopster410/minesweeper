@@ -28,11 +28,28 @@ function renderVertical(
     height: number,
     x: number,
     y: number,
+    width?: number,
 ) {
     borderBuffer.addObject(`border-vertical[${x}:${y}]`, {
-        size: { height: height, width: VERTICAL_WIDTH },
+        size: { height: height, width: width ?? VERTICAL_WIDTH },
         coords: { x: x, y: y },
         textureCoords: TEXTURE_COORDS_BORDER.VERTICAL,
+    });
+
+    return `border-vertical[${x}:${y}]`;
+}
+
+function renderEmpty(
+    borderBuffer: BufferMethods,
+    height: number,
+    width: number,
+    x: number,
+    y: number,
+) {
+    borderBuffer.addObject(`border-empty[${x}:${y}]`, {
+        size: { height: height, width: width },
+        coords: { x: x, y: y },
+        textureCoords: TEXTURE_COORDS_BORDER.EMPTY,
     });
 
     return `border-vertical[${x}:${y}]`;
@@ -206,6 +223,14 @@ function renderTopSection(
             x + VERTICAL_WIDTH + width,
             y + topSectionHeight,
         ),
+
+        background: renderEmpty(
+            borderBuffer,
+            topSectionHeight,
+            width,
+            x + VERTICAL_WIDTH,
+            y,
+        ),
     };
 }
 
@@ -244,6 +269,8 @@ export async function getBorder(canvas: Canvas, topSectionHeight: number) {
     const borderBuffer = canvas.createBuffer(
         'border',
         textures.get(currentTexture),
+        'fixed',
+        -0.5,
     );
 
     let info: {

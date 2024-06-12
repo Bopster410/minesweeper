@@ -38,6 +38,12 @@ export class ChooseSizeMenu extends Component<
                 inputTarget.value = inputTarget.value.replace(/[^\d]*/gi, '');
             }
         });
+
+        this.htmlElement
+            .getElementsByClassName('choose-size-menu__custom')[0]
+            .addEventListener('focusin', () => {
+                this.choosePreset('custom');
+            });
     }
 
     protected parseCustomData(formData: FormData) {

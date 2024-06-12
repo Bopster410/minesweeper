@@ -115,7 +115,7 @@ export class App extends Component<HTMLDivElement> {
                         {
                             width: 10,
                             height: 10,
-                            bombs: 16,
+                            bombs: 5,
                             name: 'intermediate',
                             text: 'Продолжающий',
                         },
@@ -135,6 +135,8 @@ export class App extends Component<HTMLDivElement> {
                 if (params !== null) {
                     this.updateSize(params);
                 }
+
+                data.drawField();
 
                 this.componentDidMount();
             })

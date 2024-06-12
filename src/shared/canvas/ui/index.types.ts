@@ -1,3 +1,4 @@
+import { Position } from '.';
 import { Color } from '../lib/index.types';
 
 export type CanvasProps = {
@@ -5,6 +6,14 @@ export type CanvasProps = {
     width: number;
     height: number;
     clearColor?: Color;
+    scenePosition?: {
+        coords: Coords;
+        size: Size;
+    };
+    visiblePartPosition?: {
+        coords: Coords;
+        size: Size;
+    };
 };
 
 export type Coords = {
@@ -22,4 +31,40 @@ export type SquareCoords = {
     bottomLeft: Coords;
     bottomRight: Coords;
     topRight: Coords;
+};
+
+export type ObjectInfo = {
+    index: number;
+    coords: Coords;
+    size: Size;
+    textureCoords: SquareCoords;
+};
+
+export type RenderingBufferInfo = {
+    bufferValues: number[];
+    texture: WebGLTexture;
+    objects: Map<string, ObjectInfo>;
+    position: Position;
+    zIndex: number;
+};
+
+export type BufferMethods = {
+    addObject: (
+        name: string,
+        params: {
+            size: Size;
+            coords: Coords;
+            textureCoords: SquareCoords;
+        },
+    ) => void;
+    updateObject: (
+        name: string,
+        params: {
+            size?: Size;
+            coords?: Coords;
+            textureCoords?: SquareCoords;
+        },
+    ) => void;
+    updateTexture: (texture: WebGLTexture) => void;
+    clear: () => void;
 };

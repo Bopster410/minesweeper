@@ -1,3 +1,3 @@
 export { getNewTile } from './lib';
-export { Tile } from './ui';
-export type { TileState, TileType } from './ui';
+export { Tile, getOpenedInfo } from './ui';
+export type { TileState, TileType, TileMainInfo } from './ui';

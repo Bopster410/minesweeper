@@ -68,10 +68,12 @@ export class Smile {
             return;
         }
 
+        this.state = newState;
+
         let newTextureCoords: SquareCoords = null;
         switch (newState) {
             case 'pressed':
-                newTextureCoords = SMILE_TEXTURE_COORDS.DEFAULT;
+                newTextureCoords = SMILE_TEXTURE_COORDS.PRESSED;
                 break;
             case 'scared':
                 newTextureCoords = SMILE_TEXTURE_COORDS.SCARED;
@@ -112,5 +114,9 @@ export class Smile {
 
     setScared() {
         this.changeState('scared');
+    }
+
+    get smileState() {
+        return this.state;
     }
 }
