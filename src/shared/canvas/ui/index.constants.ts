@@ -13,6 +13,6 @@ export const OFFSET = {
 export const DATA_SIZE = 4;
 
 export const MOUSE_SENSIVITY = {
-    x: 0.4,
-    y: 0.4,
+    x: 0.5,
+    y: 0.5,
 };

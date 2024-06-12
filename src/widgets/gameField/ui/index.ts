@@ -1,138 +1,42 @@
 import { Canvas, Coords } from '@/shared/canvas';
-import { Tile, getNewTile } from './tile';
+import { getCursor } from '@/shared/lib/cursor';
 import {
+    checkVictory,
     drawEmptyField,
-    gameState,
     generateField,
     getClickedCoords,
-    openAdjacentFields,
+    getClickedObject,
     openBombs,
     openFlags,
     openFullField,
+    processClick,
+    rightClick,
     updateField,
+    getFieldSegment,
+    moveVisibleArea,
+    pressTile,
 } from '../lib';
+import { connection, gameState } from '../model';
 import { ElementsPositions, Position, Theme } from './index.types';
 import { getBorder } from './border';
-import { getSmile } from './smile';
-import { Smile } from './smile/ui';
-import { GameStateMethods } from '../lib/gameState/lib/index.types';
+import { getSmile, Smile } from './smile';
+import { Tile, getNewTile } from './tile';
+import {
+    TOP_SECTION_HEIGHT,
+    MAX_WIDTH,
+    MAX_VISIBLE_WIDTH,
+    MAX_HEIGHT,
+    MAX_VISIBLE_HEIGHT,
+    SMILE_SIZE,
+    MAX_RENDERING_WIDTH,
+    MAX_RENDERING_HEIGHT,
+} from './index.constants';
 
-const SMILE_SIZE = 60;
-const TOP_SECTION_HEIGHT = 80;
-const MAX_WIDTH = 10000;
-const MAX_HEIGHT = 10000;
-const MAX_VISIBLE_WIDTH = 20;
-const MAX_VISIBLE_HEIGHT = 20;
+export type { Position, ElementsPositions };
+export type { Tile, TileMainInfo, TileType, TileState } from './tile';
+export { getOpenedInfo } from './tile';
 
-function processClick(
-    tiles: Tile[][],
-    fieldX: number,
-    fieldY: number,
-    tileSize: number,
-    height: number,
-    e: MouseEvent,
-) {
-    e.preventDefault();
-
-    const { i, j } = getClickedCoords(e, fieldX, fieldY, height, tileSize);
-
-    if (tiles[i] === undefined) {
-        return null;
-    }
-
-    const tile = tiles[i][j];
-    if (tile !== undefined) {
-        const result = openAdjacentFields(tiles, i, j);
-        if (result?.openedType === 'bomb') {
-            tile.setTypeExploded();
-        }
-        return result;
-    }
-
-    return null;
-}
-
-function processRightClick(
-    tiles: Tile[][],
-    fieldX: number,
-    fieldY: number,
-    tileSize: number,
-    height: number,
-    e: MouseEvent,
-) {
-    e.preventDefault();
-
-    const { i, j } = getClickedCoords(e, fieldX, fieldY, height, tileSize);
-
-    if (tiles[i] === undefined) {
-        return null;
-    }
-
-    const tile = tiles[i][j];
-    if (tile !== undefined) {
-        if (tile.tileState === 'opened') {
-            return null;
-        }
-
-        const withFlag = tile.tileState === 'flag';
-        if (withFlag) {
-            tile.close();
-        }
-
-        if (!withFlag) {
-            tile.putFlag();
-        }
-
-        return {
-            type: tile.tileType,
-            state: tile.tileState,
-            coords: { x: i, y: j },
-        };
-    }
-    return null;
-}
-
-function isObjectClicked(
-    position: Position,
-    e: MouseEvent,
-    canvasHeight: number,
-) {
-    const clickX = e.offsetX;
-    const clickY = canvasHeight - e.offsetY;
-    return (
-        position.x <= clickX &&
-        clickX <= position.x + position.width &&
-        position.y <= clickY &&
-        clickY <= position.y + position.height
-    );
-}
-
-function getClickedObject(
-    e: MouseEvent,
-    positions: ElementsPositions,
-    canvasHeight: number,
-) {
-    if (isObjectClicked(positions.field, e, canvasHeight)) {
-        return 'FIELD';
-    }
-
-    if (isObjectClicked(positions.smile, e, canvasHeight)) {
-        return 'SMILE';
-    }
-
-    return null;
-}
-
-function checkVictory(
-    bombsLeft: number,
-    noBombsFields: number,
-    setVictory: () => void,
-) {
-    if (bombsLeft === 0 && noBombsFields === 0) {
-        setVictory();
-    }
-}
-
+// eslint-disable-next-line max-lines-per-function
 function setTextures(
     changeBorderTexture: (name: string) => void,
     updateBorderTexture: () => void,
@@ -205,6 +109,27 @@ function setTextures(
         text: 'Копатель онлайн',
     });
 
+    textures.set('forest2', {
+        border: () => {
+            changeBorderTexture('forest2');
+            updateBorderTexture();
+        },
+        smile: () => {
+            changeSmileTexture('forest2');
+            updateSmileTexture();
+        },
+        tile: () => {
+            changeTilesTexture('forest2');
+            updateTilesTexture();
+        },
+        color: {
+            red: 167,
+            green: 211,
+            blue: 158,
+        },
+        text: 'Лесная 2',
+    });
+
     return textures;
 }
 
@@ -214,48 +139,6 @@ function getAvailableThemes(themes: Map<string, Theme>) {
         themesInfo.push({ name: name, text: theme.text });
     });
     return themesInfo;
-}
-
-function rightClick(
-    gameStateMethods: GameStateMethods,
-    tiles: Tile[][],
-    positions: ElementsPositions,
-    canvas: Canvas,
-    tileSize: number,
-    flagsPositions: Set<Coords>,
-    e: MouseEvent,
-) {
-    if (gameStateMethods.getStatus() === 'game') {
-        const result = processRightClick(
-            tiles,
-            positions.field.x + canvas.sceneOffset.x,
-            positions.field.y + canvas.sceneOffset.y,
-            tileSize,
-            canvas.height,
-            e,
-        );
-        if (result === null) {
-            return;
-        }
-
-        // If player put flag on bomb
-        if (result.state === 'flag') {
-            if (result.type === 'bomb') {
-                gameStateMethods.setBombs(gameStateMethods.getBombsLeft() - 1);
-            }
-            flagsPositions.add(result.coords);
-            gameStateMethods.setFlagsPut(gameStateMethods.getFlagsPut() + 1);
-        }
-
-        // If player removed flag from bomb
-        if (result.state === 'closed') {
-            if (result.type === 'bomb') {
-                gameStateMethods.setBombs(gameStateMethods.getBombsLeft() + 1);
-            }
-            flagsPositions.delete(result.coords);
-            gameStateMethods.setFlagsPut(gameStateMethods.getFlagsPut() - 1);
-        }
-    }
 }
 
 // Get canvas with game
@@ -275,17 +158,35 @@ export async function getGameFieldCanvas(
 
     let currentTexture = initialTheme;
 
-    // Init canvas
+    let scrollAvailable = false;
+
+    let visibleArea: Position = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    };
+
+    let renderingArea: Position = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    };
+
     const canvas = new Canvas(parent, {
         className: className,
         width: 0,
         height: 0,
     });
 
+    const cursor = getCursor(canvas.htmlElement);
+
     // Init ui components
-    const tile = await getNewTile(canvas);
+    const tile = await getNewTile(canvas, tileSize);
     const border = await getBorder(canvas, TOP_SECTION_HEIGHT);
     const smile = await getSmile(canvas);
+    await connection.createConnection();
 
     const textures = setTextures(
         (name: string) => border.changeTexture(name),
@@ -302,6 +203,11 @@ export async function getGameFieldCanvas(
     let positions: ElementsPositions = null;
 
     let tiles: Tile[][] = [];
+
+    let pressedTile: Tile = null;
+    let isPressedAndHold = false;
+    let isScrolling = false;
+    let isLoading = false;
 
     let bobmsPositions: Coords[] = [];
     const flagsPositions = new Set<Coords>();
@@ -337,7 +243,7 @@ export async function getGameFieldCanvas(
         return wasChanged;
     };
 
-    const setMenu = () => {
+    const setMenu = async () => {
         // Initial game state
         const fieldCoords = border.renderBorder(
             tileSize * visibleWidth,
@@ -348,14 +254,33 @@ export async function getGameFieldCanvas(
 
         flagsPositions.clear();
 
-        // Draw initial empty field
-        tiles = drawEmptyField(
+        visibleArea = {
+            x: 0,
+            y: 0,
+            width: visibleWidth,
+            height: visibleHeight,
+        };
+
+        renderingArea = {
+            x: 0,
+            y: 0,
+            width: Math.min(MAX_RENDERING_WIDTH, width),
+            height: Math.min(MAX_RENDERING_HEIGHT, height),
+        };
+
+        scrollAvailable =
+            visibleArea.width < renderingArea.width ||
+            visibleArea.height < renderingArea.height;
+
+        // // Draw initial empty field
+        tiles = await drawEmptyField(
             fieldCoords.fieldX,
             fieldCoords.fieldY,
             width,
             height,
             tileSize,
             tile.addNewEmptyTile,
+            renderingArea,
         );
 
         smileBtn = smile.renderSmile(
@@ -430,8 +355,159 @@ export async function getGameFieldCanvas(
         }
     });
 
+    canvas.htmlElement.addEventListener('mousedown', (e) => {
+        if (('button' in e && e.button === 2) || isPressedAndHold) {
+            return;
+        }
+
+        const clicked = getClickedObject(e, positions, canvas.height);
+        if (clicked !== null) {
+            isPressedAndHold = true;
+            if (
+                clicked === 'FIELD' &&
+                (gameState.getStatus() === 'menu' ||
+                    gameState.getStatus() === 'game') &&
+                !isLoading
+            ) {
+                pressedTile = pressTile(
+                    tiles,
+                    positions,
+                    renderingArea,
+                    canvas,
+                    tileSize,
+                    e,
+                );
+                if (pressedTile?.tileState === 'closed') {
+                    cursor.setCursorPointer();
+                    smileBtn.setScared();
+                }
+            }
+
+            if (clicked === 'SMILE') {
+                smileBtn.setPressed();
+                cursor.setCursorPointer();
+            }
+        }
+    });
+
+    canvas.htmlElement.addEventListener('mouseleave', () => {
+        isPressedAndHold = false;
+        isScrolling = false;
+        cursor.setCursorDefault();
+        if (
+            smileBtn.smileState === 'pressed' ||
+            smileBtn.smileState === 'scared'
+        ) {
+            smileBtn.setDefault();
+        }
+
+        if (isPressedAndHold && !isLoading) {
+            moveVisibleArea(
+                canvas,
+                visibleArea,
+                renderingArea,
+                tileSize,
+                width,
+                height,
+                () => {
+                    getFieldSegment(
+                        tiles,
+                        renderingArea,
+                        tile.createFromMainInfo,
+                    )
+                        .then(() => {
+                            tile.updateTiles(tiles);
+                        })
+                        .catch(() => {});
+                },
+            );
+
+            return;
+        }
+    });
+
+    canvas.htmlElement.addEventListener('mousemove', () => {
+        if (
+            smileBtn?.smileState === 'pressed' ||
+            smileBtn?.smileState === 'scared'
+        ) {
+            smileBtn.setDefault();
+        }
+
+        if (isPressedAndHold) {
+            isScrolling = scrollAvailable;
+            isPressedAndHold = false;
+        }
+
+        if (isScrolling) {
+            cursor.setCursorMove();
+        }
+
+        if (!isScrolling) {
+            if (isLoading) {
+                cursor.setCursorLoading();
+            }
+            if (!isLoading) {
+                cursor.setCursorDefault();
+            }
+        }
+
+        if (pressedTile) {
+            pressedTile.setNotPressed();
+            pressedTile = null;
+        }
+    });
+
+    // eslint-disable-next-line max-lines-per-function
     canvas.htmlElement.addEventListener('mouseup', (e) => {
+        if (
+            smileBtn?.smileState === 'pressed' ||
+            smileBtn?.smileState === 'scared'
+        ) {
+            smileBtn.setDefault();
+        }
+        isPressedAndHold = false;
+        isScrolling = false;
+
+        setTimeout(() => {
+            if (!isScrolling && !isPressedAndHold) {
+                cursor.setCursorDefault();
+            }
+        }, 150);
+
+        if (pressedTile) {
+            pressedTile.setNotPressed();
+            pressedTile = null;
+        }
+
+        if (isLoading) {
+            cursor.setCursorLoading();
+            return;
+        }
+
+        cursor.setCursorDefault();
+
         if (canvas.mouseMoved) {
+            moveVisibleArea(
+                canvas,
+                visibleArea,
+                renderingArea,
+                tileSize,
+                width,
+                height,
+                () => {
+                    getFieldSegment(
+                        tiles,
+                        renderingArea,
+                        tile.createFromMainInfo,
+                    )
+                        .then(() => {
+                            tile.updateTiles(tiles);
+                        })
+                        .catch(() => {});
+                },
+            );
+
             return;
         }
 
@@ -462,7 +538,7 @@ export async function getGameFieldCanvas(
                 clickCoords.j,
             );
 
-            updateField(field, width, height, tiles);
+            updateField(field, width, height, tiles, renderingArea);
             bobmsPositions = bombs;
             gameStateMethods.setBombs(totalGenerated);
             gameStateMethods.setNoBombsFields(width * height - totalGenerated);
@@ -478,14 +554,33 @@ export async function getGameFieldCanvas(
                     tileSize,
                     canvas.height,
                     e,
+                    renderingArea,
+                    width,
+                    height,
                 );
+
+                isLoading = true;
+
+                setTimeout(() => {
+                    if (isLoading) {
+                        cursor.setCursorLoading();
+                    }
+                }, 200);
+
+                result.openTilesDb
+                    .then(() => {
+                        isLoading = false;
+                        cursor.setCursorDefault();
+                    })
+                    .catch(() => {});
+
                 if (result === null) {
                     return;
                 }
 
                 if (result?.openedType === 'bomb') {
-                    openBombs(tiles, bobmsPositions);
-                    openFlags(tiles, flagsPositions);
+                    openBombs(tiles, bobmsPositions, renderingArea);
+                    openFlags(tiles, flagsPositions, renderingArea);
                     gameStateMethods.setStatus('defeat');
                 }
 
@@ -499,7 +594,9 @@ export async function getGameFieldCanvas(
         }
 
         if (clicked === 'SMILE') {
-            setMenu();
+            setMenu()
+                .then(() => console.log('ready'))
+                .catch((e) => console.log('error ', e));
         }
     });
 
@@ -512,6 +609,7 @@ export async function getGameFieldCanvas(
             tileSize,
             flagsPositions,
             e,
+            renderingArea,
         );
     });
 
@@ -535,11 +633,15 @@ export async function getGameFieldCanvas(
             bombs?: number;
         }) => {
             if (updateSize(params)) {
-                setMenu();
+                setMenu()
+                    .then(() => console.log('ready'))
+                    .catch((e) => console.log('error ', e));
             }
         },
         stopGame: () => {
-            setMenu();
+            setMenu()
+                .then(() => console.log('ready'))
+                .catch((e) => console.log('error ,', e));
         },
         openField: () => {
             openFullField(tiles);

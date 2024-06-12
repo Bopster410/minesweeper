@@ -3,11 +3,93 @@ import { generateTileId } from '../lib';
 import { TILE_TEXTURE_COORDS } from '../textures';
 import { Coords, Size, SquareCoords } from '@/shared/canvas/ui/index.types';
 
-export type { TileState, TileType } from './index.types';
+export type { TileState, TileType, TileMainInfo } from './index.types';
+
+export function getOpenedInfo(state: TileState, type: TileType) {
+    if (state === 'flag' && type === 'bomb') return null;
+
+    if (state === 'flag' && type !== 'bomb') return 'flag-wrong';
+
+    if (state !== 'flag' && state !== 'flag-wrong') return 'opened';
+}
+
+function getTextureCoords(
+    state: TileState,
+    type: TileType,
+    pressed: boolean,
+    bombsAround?: number,
+) {
+    let newTextureCoords: SquareCoords = null;
+
+    if (state === 'opened') {
+        switch (type) {
+            case 'exploded':
+                newTextureCoords = TILE_TEXTURE_COORDS.BOMB_WRONG;
+                break;
+            case 'bomb':
+                newTextureCoords = TILE_TEXTURE_COORDS.BOMB;
+                break;
+            case 'digit':
+                switch (bombsAround) {
+                    case 1:
+                        newTextureCoords = TILE_TEXTURE_COORDS.ONE;
+                        break;
+                    case 2:
+                        newTextureCoords = TILE_TEXTURE_COORDS.TWO;
+                        break;
+                    case 3:
+                        newTextureCoords = TILE_TEXTURE_COORDS.THREE;
+                        break;
+                    case 4:
+                        newTextureCoords = TILE_TEXTURE_COORDS.FOUR;
+                        break;
+                    case 5:
+                        newTextureCoords = TILE_TEXTURE_COORDS.FIVE;
+                        break;
+                    case 6:
+                        newTextureCoords = TILE_TEXTURE_COORDS.SIX;
+                        break;
+                    case 7:
+                        newTextureCoords = TILE_TEXTURE_COORDS.SEVEN;
+                        break;
+                    case 8:
+                        newTextureCoords = TILE_TEXTURE_COORDS.EIGHT;
+                        break;
+                    default:
+                        newTextureCoords = TILE_TEXTURE_COORDS.EMPTY;
+                        break;
+                }
+                break;
+            default:
+                newTextureCoords = TILE_TEXTURE_COORDS.EMPTY;
+        }
+    }
+
+    if (state === 'closed') {
+        if (pressed) {
+            newTextureCoords = TILE_TEXTURE_COORDS.EMPTY;
+        }
+        if (!pressed) {
+            newTextureCoords = TILE_TEXTURE_COORDS.CLOSED;
+        }
+    }
+
+    if (state === 'flag') {
+        newTextureCoords = TILE_TEXTURE_COORDS.FLAG;
+    }
+
+    if (state === 'flag-wrong') {
+        newTextureCoords = TILE_TEXTURE_COORDS.FLAG_WRONG;
+    }
+
+    return newTextureCoords;
+}
 
 export class Tile {
+    protected rendering: boolean;
     protected state: TileState;
     protected type: TileType;
+    protected pressed: boolean;
     protected coords: {
         x: number;
         y: number;
@@ -54,6 +136,7 @@ export class Tile {
         size: number,
         state: TileState,
         type: TileType,
+        renderRightNow: boolean,
         bombsAround?: number,
     ) {
         this.state = state;
@@ -65,17 +148,53 @@ export class Tile {
             y: y,
         };
         this.size = size;
+        this.pressed = false;
         this.coordsId = generateTileId(x, y);
         this.bombsAround = bombsAround;
-        this.renderOnCanvas();
+        this.rendering = false;
+        if (renderRightNow) this.renderOnCanvas();
     }
 
-    protected renderOnCanvas() {
-        this.addToBuffer(this.coordsId, {
-            size: { width: this.size, height: this.size },
-            coords: this.coords,
-            textureCoords: TILE_TEXTURE_COORDS.CLOSED,
-        });
+    set addFunction(
+        addToBuffer: (
+            name: string,
+            params: {
+                size: Size;
+                coords: Coords;
+                textureCoords: SquareCoords;
+            },
+        ) => void,
+    ) {
+        this.addToBuffer = addToBuffer;
+    }
+
+    set updateFunction(
+        updateObject: (
+            name: string,
+            params: {
+                size?: Size;
+                coords?: Coords;
+                textureCoords?: SquareCoords;
+            },
+        ) => void,
+    ) {
+        this.updateObject = updateObject;
+    }
+
+    renderOnCanvas() {
+        if (!this.rendering) {
+            this.rendering = true;
+            this.addToBuffer(this.coordsId, {
+                size: { width: this.size, height: this.size },
+                coords: this.coords,
+                textureCoords: getTextureCoords(
+                    this.state,
+                    this.type,
+                    this.pressed,
+                    this.bombsAround,
+                ),
+            });
+        }
     }
 
     get tileCoords() {
@@ -95,65 +214,13 @@ export class Tile {
     }
 
     protected updateTextureCoords() {
-        let newTextureCoords: SquareCoords = null;
-        if (this.state === 'opened') {
-            switch (this.type) {
-                case 'exploded':
-                    newTextureCoords = TILE_TEXTURE_COORDS.BOMB_WRONG;
-                    break;
-                case 'bomb':
-                    newTextureCoords = TILE_TEXTURE_COORDS.BOMB;
-                    break;
-                case 'digit':
-                    switch (this.bombsAround) {
-                        case 1:
-                            newTextureCoords = TILE_TEXTURE_COORDS.ONE;
-                            break;
-                        case 2:
-                            newTextureCoords = TILE_TEXTURE_COORDS.TWO;
-                            break;
-                        case 3:
-                            newTextureCoords = TILE_TEXTURE_COORDS.THREE;
-                            break;
-                        case 4:
-                            newTextureCoords = TILE_TEXTURE_COORDS.FOUR;
-                            break;
-                        case 5:
-                            newTextureCoords = TILE_TEXTURE_COORDS.FIVE;
-                            break;
-                        case 6:
-                            newTextureCoords = TILE_TEXTURE_COORDS.SIX;
-                            break;
-                        case 7:
-                            newTextureCoords = TILE_TEXTURE_COORDS.SEVEN;
-                            break;
-                        case 8:
-                            newTextureCoords = TILE_TEXTURE_COORDS.EIGHT;
-                            break;
-                        default:
-                            newTextureCoords = TILE_TEXTURE_COORDS.EMPTY;
-                            break;
-                    }
-                    break;
-                default:
-                    newTextureCoords = TILE_TEXTURE_COORDS.EMPTY;
-            }
-        }
-
-        if (this.state === 'closed') {
-            newTextureCoords = TILE_TEXTURE_COORDS.CLOSED;
-        }
-
-        if (this.state === 'flag') {
-            newTextureCoords = TILE_TEXTURE_COORDS.FLAG;
-        }
-
-        if (this.state === 'flag-wrong') {
-            newTextureCoords = TILE_TEXTURE_COORDS.FLAG_WRONG;
-        }
-
         this.updateObject(this.coordsId, {
-            textureCoords: newTextureCoords,
+            textureCoords: getTextureCoords(
+                this.state,
+                this.type,
+                this.pressed,
+                this.bombsAround,
+            ),
         });
     }
 
@@ -172,6 +239,16 @@ export class Tile {
         }
 
         this.type = newType;
+        this.updateTextureCoords();
+    }
+
+    setPressed() {
+        this.pressed = true;
+        this.updateTextureCoords();
+    }
+
+    setNotPressed() {
+        this.pressed = false;
         this.updateTextureCoords();
     }
 
@@ -203,13 +280,11 @@ export class Tile {
     }
 
     open() {
-        if (this.state === 'flag' && this.type === 'bomb') return;
+        const newState = getOpenedInfo(this.state, this.type);
 
-        if (this.state === 'flag' && this.type !== 'bomb')
-            this.changeState('flag-wrong');
+        if (newState === null) return;
 
-        if (this.state !== 'flag' && this.state !== 'flag-wrong')
-            this.changeState('opened');
+        this.changeState(newState);
     }
 
     close() {

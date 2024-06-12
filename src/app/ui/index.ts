@@ -115,7 +115,7 @@ export class App extends Component<HTMLDivElement> {
                         {
                             width: 10,
                             height: 10,
-                            bombs: 16,
+                            bombs: 5,
                             name: 'intermediate',
                             text: 'Продолжающий',
                         },

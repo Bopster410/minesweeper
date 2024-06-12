@@ -1,7 +1,9 @@
-import { GameState, GameStatus } from './index.types';
+import { GameState, GameStateMethods, GameStatus } from './index.types';
+
+export type { GameStateMethods };
 
 // eslint-disable-next-line max-lines-per-function
-export function getNewGameState() {
+export function getNewGameState(): GameStateMethods {
     const gameState: GameState = {
         status: null,
     };

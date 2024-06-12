@@ -2,6 +2,7 @@ import { SquareCoords } from '@/shared/canvas/ui/index.types';
 import './textureborder.png';
 import './textureborder2.png';
 import './textureborder_mine.png';
+import './textureborder_forest.png';
 
 export const TEXTURE_COORDS_BORDER: { [name: string]: SquareCoords } = {
     CORNER_TOP_LEFT: {

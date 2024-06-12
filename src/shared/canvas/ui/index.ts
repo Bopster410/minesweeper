@@ -557,6 +557,13 @@ export class Canvas extends Component<HTMLCanvasElement, CanvasProps> {
         };
     }
 
+    removeBuffer(bufferName: string) {
+        if (this.renderingBuffers.has(bufferName)) {
+            this.clearBuffer(bufferName);
+            this.renderingBuffers.delete(bufferName);
+        }
+    }
+
     clear() {
         this.clearColor();
         this.clearBuffers();
