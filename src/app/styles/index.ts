@@ -2,6 +2,8 @@ import { VARIABLES_DARK, VARIABLES_LIGHT } from './index.constants';
 import './index.style.scss';
 import { Variables } from './index.types';
 
+export type { Theme } from './index.types';
+
 function setTheme(variables: Variables) {
     document.documentElement.style.setProperty(
         '--background-color',

@@ -116,7 +116,7 @@ export function processClick(
         if (result?.openedType === 'bomb') {
             tile.setTypeExploded();
         }
-        return result;
+        return { result: result, coords: { x: i, y: j } };
     }
 
     return null;
@@ -210,6 +210,7 @@ export function rightClick(
             e,
             renderingArea,
         );
+
         if (result === null) {
             return;
         }
@@ -231,6 +232,8 @@ export function rightClick(
             flagsPositions.delete(result.coords);
             gameStateMethods.setFlagsPut(gameStateMethods.getFlagsPut() - 1);
         }
+
+        return result.coords;
     }
 }
 

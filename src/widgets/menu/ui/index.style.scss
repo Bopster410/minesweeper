@@ -1,5 +1,5 @@
 .menu {
-    padding: 30px 40px 0 20px;
+    padding: 30px 40px 20px 20px;
     height: 100%;
     bottom: 0px;
     left: 0px;
@@ -10,13 +10,11 @@
     opacity: 0;
     width: 0;
     box-sizing: border-box;
-    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .menu-header {
     margin-bottom: 20px;
-}
-
-.menu__choose-size {
-    margin-bottom: 30px;
 }

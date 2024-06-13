@@ -6,6 +6,7 @@ import { ChooseSizeMenu } from './chooseSize';
 import { ChooseThemeMenu } from './theme';
 import { insertDarkOverlay } from '@/shared/lib/darkOverlay';
 import { isClickOut } from '@/shared/lib/clickOut';
+import { SavesMenu } from './save/ui';
 
 export class Menu extends Component<HTMLDivElement, MenuProps> {
     protected chooseSize: ChooseSizeMenu;
@@ -13,8 +14,29 @@ export class Menu extends Component<HTMLDivElement, MenuProps> {
     protected overlay: HTMLDivElement;
     protected width: string;
     opened: boolean;
+    protected saves: SavesMenu;
     constructor(parent: Element, props: MenuProps) {
         super(parent, menuTmpl, props);
+    }
+
+    get saveBtn() {
+        return this.saves.saveGameBtn;
+    }
+
+    get loadBtn() {
+        return this.saves.loadGameBtn;
+    }
+
+    setDisabled() {
+        this.chooseSize.setDisabled();
+        this.chooseTheme.setDisabled();
+        this.saves.setDisabled();
+    }
+
+    setEnabled() {
+        this.chooseSize.setEnabled();
+        this.chooseTheme.setEnabled();
+        this.saves.setEnabled();
     }
 
     open() {
@@ -63,6 +85,9 @@ export class Menu extends Component<HTMLDivElement, MenuProps> {
                 themes: this.props.themes,
             });
         }
+        this.saves = new SavesMenu(this.htmlElement, {
+            className: 'menu__saves',
+        });
     }
 
     choosePreset(name: string) {
