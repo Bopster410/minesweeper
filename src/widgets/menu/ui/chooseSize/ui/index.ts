@@ -14,6 +14,24 @@ export class ChooseSizeMenu extends Component<
         super(parent, tmpl, props);
     }
 
+    setDisabled() {
+        this.submitBtn.setDisabled();
+        Array.from(this.htmlElement.getElementsByTagName('input')).forEach(
+            (input) => {
+                input.disabled = true;
+            },
+        );
+    }
+
+    setEnabled() {
+        this.submitBtn.setEnabled();
+        Array.from(this.htmlElement.getElementsByTagName('input')).forEach(
+            (input) => {
+                input.disabled = false;
+            },
+        );
+    }
+
     protected render() {
         this.renderTemplate();
         this.submitBtn = new Button(this.htmlElement, {

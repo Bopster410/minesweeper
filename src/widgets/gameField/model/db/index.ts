@@ -201,10 +201,10 @@ export function getConnection(name: string, version?: number) {
 
                 openRequest.addEventListener('upgradeneeded', (e) => {
                     db = openRequest.result;
+                    console.log('upgrade');
                     switch (e.oldVersion) {
                         case 0:
                             initDb(db);
-                            resolve(1);
                             break;
                         default:
                             break;
@@ -219,6 +219,7 @@ export function getConnection(name: string, version?: number) {
 
                 openRequest.addEventListener('success', () => {
                     db = openRequest.result;
+                    console.log('success');
                     resolve(1);
 
                     db.addEventListener('versionchange', () => {

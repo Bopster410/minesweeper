@@ -8,11 +8,14 @@ export type GameState = {
 };
 
 export type GameStateMethods = {
+    loadState: (state: GameState) => void;
+    getStateInfo: () => GameState;
     setInitial: () => void;
     getStatus: () => GameStatus;
     getBombsLeft: () => number;
     getNoBombsFields: () => number;
     getFlagsPut: () => number;
+
     addOnBombsChange: (
         name: string,
         callback: (newBombs?: number) => void,
