@@ -1,12 +1,20 @@
 import './index.style.scss';
-import { getGameFieldCanvas } from '@/widgets/gameField';
 import appTmpl from './index.template.pug';
 import { Component } from '@/shared/@types/index.component';
 import { Canvas } from '@/shared/canvas';
+import { setDarkTheme, setLightTheme, Theme } from '../styles';
+import { Button, getDarkLightBtn, getSlidersBtn } from '@/shared/uikit/button';
+import { toast } from '@/shared/uikit/toast';
 import { Menu } from '@/widgets/menu';
-import { setDarkTheme, setLightTheme } from '../styles';
-import { Button } from '@/shared/uikit/button';
-import { getDarkLightBtn, getSlidersBtn } from '@/shared/uikit/button/lib';
+import { getGameFieldCanvas, GameSave } from '@/widgets/gameField';
+import {
+    loadLocally,
+    loadTextures,
+    loadTheme,
+    saveLocally,
+    saveTextures,
+    saveTheme,
+} from '../saves';
 
 export class App extends Component<HTMLDivElement> {
     protected gameCanvas: Canvas;
@@ -22,7 +30,12 @@ export class App extends Component<HTMLDivElement> {
     protected mainElement: Element;
     protected headerElement: Element;
     protected changeThemeBtn: Button;
-    protected currentTheme: 'dark' | 'light';
+    protected currentTheme: Theme;
+    protected save: GameSave;
+    protected getSave: () => GameSave;
+    protected loadSave: (save: GameSave) => Promise<boolean>;
+    protected successMsg: (header: string, text?: string) => void;
+    protected errorMsg: (header: string, text?: string) => void;
 
     constructor(parent: Element) {
         super(parent, appTmpl, { className: 'app' });
@@ -49,6 +62,7 @@ export class App extends Component<HTMLDivElement> {
 
                 if (name) {
                     this.changeTheme(name);
+                    saveTextures(name);
                     this.draw();
                 }
             },
@@ -71,15 +85,48 @@ export class App extends Component<HTMLDivElement> {
                 this.currentTheme = 'dark';
                 this.changeThemeBtn.toggle();
             }
+
+            saveTheme(this.currentTheme);
+        });
+
+        this.menu.saveBtn.htmlElement.addEventListener('click', () => {
+            saveLocally(this.getSave());
+            this.successMsg('Игра сохранена!');
+        });
+
+        this.menu.loadBtn.htmlElement.addEventListener('click', () => {
+            const save = loadLocally();
+            if (save === undefined) {
+                return;
+            }
+
+            this.menu.setDisabled();
+            this.menu.loadBtn.startLoading();
+
+            this.loadSave(save)
+                .then(() => {
+                    this.successMsg('Сохранения загружены!');
+                })
+                .catch((e) => {
+                    console.log(e);
+                    this.errorMsg('Не удалось загрузить сохранение');
+                })
+                .finally(() => {
+                    this.menu.setEnabled();
+                    this.menu.loadBtn.stopLoading();
+                });
         });
     }
 
     protected render() {
         this.renderTemplate();
+
         this.mainElement =
             this.htmlElement.getElementsByClassName('app__main')[0];
         this.headerElement =
             this.htmlElement.getElementsByClassName('app__header')[0];
+
+        this.mainElement.classList.add('app__main--loading');
 
         this.menuBtn = getSlidersBtn(this.headerElement, {
             className: 'app__menu-btn',
@@ -93,15 +140,27 @@ export class App extends Component<HTMLDivElement> {
             type: 'button',
         });
 
-        this.currentTheme = 'light';
-        setLightTheme();
+        this.currentTheme = (loadTheme() as Theme) ?? 'dark';
+        if (this.currentTheme === 'dark') setDarkTheme();
+        if (this.currentTheme === 'light') setLightTheme();
 
-        getGameFieldCanvas(this.mainElement, 'app__game-canvas', 'default')
+        const newToast = toast();
+        this.successMsg = newToast.addSuccess;
+        this.errorMsg = newToast.addError;
+
+        const textures =
+            (loadTextures() as 'default' | 'forest' | 'mine' | 'forest2') ??
+            'default';
+
+        getGameFieldCanvas(this.mainElement, 'app__game-canvas', textures)
             .then((data) => {
                 this.gameCanvas = data.canvas;
                 this.draw = data.drawField;
                 this.changeTheme = data.changeTexture;
                 this.updateSize = data.update;
+                this.loadSave = data.loadSave;
+                this.getSave = data.getSaveInfo;
+
                 this.menu = new Menu(this.headerElement, {
                     className: 'app__menu',
                     presets: [
@@ -130,13 +189,15 @@ export class App extends Component<HTMLDivElement> {
                     themes: data.availableThemes(),
                 });
 
-                this.menu.changeTheme('default');
+                this.menu.changeTheme(textures);
                 const params = this.menu.choosePreset('intermediate');
                 if (params !== null) {
                     this.updateSize(params);
                 }
 
                 data.drawField();
+
+                this.mainElement.classList.remove('app__main--loading');
 
                 this.componentDidMount();
             })

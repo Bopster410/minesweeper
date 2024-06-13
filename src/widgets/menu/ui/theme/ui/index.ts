@@ -11,6 +11,22 @@ export class ChooseThemeMenu extends Component<
         super(parent, tmpl, props);
     }
 
+    setDisabled() {
+        Array.from(this.htmlElement.getElementsByTagName('input')).forEach(
+            (input) => {
+                input.disabled = true;
+            },
+        );
+    }
+
+    setEnabled() {
+        Array.from(this.htmlElement.getElementsByTagName('input')).forEach(
+            (input) => {
+                input.disabled = false;
+            },
+        );
+    }
+
     changeTheme(name: string) {
         const input = document.getElementById(name);
         if (input === undefined || input.tagName.toLowerCase() !== 'input') {

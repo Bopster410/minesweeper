@@ -1,6 +1,6 @@
 import { GameState, GameStateMethods, GameStatus } from './index.types';
 
-export type { GameStateMethods };
+export type { GameStateMethods, GameState as GameStateInfo };
 
 // eslint-disable-next-line max-lines-per-function
 export function getNewGameState(): GameStateMethods {
@@ -63,6 +63,20 @@ export function getNewGameState(): GameStateMethods {
     };
 
     return {
+        loadState: (newState: GameState) => {
+            gameState.status = newState.status;
+            gameState.bombsLeft = newState.bombsLeft;
+            gameState.noBombsFieldsLeft = newState.noBombsFieldsLeft;
+            gameState.flagsPut = newState.flagsPut;
+        },
+        getStateInfo: () => {
+            return {
+                status: gameState.status,
+                bombsLeft: gameState.bombsLeft,
+                noBombsFieldsLeft: gameState.noBombsFieldsLeft,
+                flagsPut: gameState.flagsPut,
+            };
+        },
         setInitial: setInitial,
         getStatus: () => gameState.status,
         getBombsLeft: () => gameState.bombsLeft,

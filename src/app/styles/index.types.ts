@@ -4,3 +4,5 @@ export type Variables = {
     borderColor: string;
     hoverColor: string;
 };
+
+export type Theme = 'light' | 'dark';

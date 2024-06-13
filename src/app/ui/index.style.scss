@@ -30,6 +30,32 @@ $header-height: 50px;
     overflow: auto;
 }
 
+.app__main--loading {
+    overflow: hidden;
+    position: relative;
+    width: 100px;
+    height: 100px;
+    .canvas {
+        opacity: 0;
+    }
+}
+
+.app__main--loading::after {
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 6px solid transparent;
+    border-top-color: var(--color-background-dark);
+    border-radius: 50%;
+    animation: button-loading-spinner 1s ease infinite;
+}
+
 @media (max-width: 475px) {
     .app__header {
         width: 100%;

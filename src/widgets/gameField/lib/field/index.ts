@@ -559,7 +559,7 @@ export function getFieldSegment(
 export function putFlag(tile: Tile, x: number, y: number) {
     connection.putFlag(x, y, {
         onSuccess: () => {
-            tile.putFlag();
+            tile?.putFlag();
         },
     });
 }
