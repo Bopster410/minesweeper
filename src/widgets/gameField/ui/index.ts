@@ -231,7 +231,7 @@ export async function getGameFieldCanvas(
             height = params.height;
             visibleHeight = Math.min(MAX_VISIBLE_HEIGHT, height);
             canvas.height =
-                visibleWidth * tileSize + border.height() + TOP_SECTION_HEIGHT;
+                visibleHeight * tileSize + border.height() + TOP_SECTION_HEIGHT;
             wasChanged = true;
         }
 
