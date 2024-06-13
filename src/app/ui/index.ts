@@ -15,6 +15,10 @@ import {
     saveTextures,
     saveTheme,
 } from '../saves';
+import {
+    MAX_RENDERING_WIDTH,
+    MAX_VISIBLE_HEIGHT,
+} from '@/widgets/gameField/ui/index.constants';
 
 export class App extends Component<HTMLDivElement> {
     protected gameCanvas: Canvas;
@@ -29,6 +33,7 @@ export class App extends Component<HTMLDivElement> {
     }) => void;
     protected mainElement: Element;
     protected headerElement: Element;
+    protected footerElement: Element;
     protected changeThemeBtn: Button;
     protected currentTheme: Theme;
     protected save: GameSave;
@@ -41,16 +46,35 @@ export class App extends Component<HTMLDivElement> {
         super(parent, appTmpl, { className: 'app' });
     }
 
+    protected updateCanvasSize(params: {
+        width?: number;
+        height?: number;
+        bombs?: number;
+    }) {
+        const hugeSize =
+            params.height > MAX_VISIBLE_HEIGHT ||
+            params.width > MAX_RENDERING_WIDTH;
+        if (hugeSize) {
+            (this.footerElement as HTMLDivElement).style.opacity = '1';
+        }
+        if (!hugeSize) {
+            (this.footerElement as HTMLDivElement).style.opacity = '0';
+        }
+
+        this.updateSize({
+            width: params.width,
+            height: params.height,
+            bombs: params.bombs,
+        });
+    }
+
+    // eslint-disable-next-line max-lines-per-function
     protected componentDidMount() {
         this.menu.form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.menu.close();
             const data = this.menu.data;
-            this.updateSize({
-                width: data.width,
-                height: data.height,
-                bombs: data.bombs,
-            });
+            this.updateCanvasSize(data);
         });
 
         this.menu.changeThemeElement.addEventListener(
@@ -115,7 +139,6 @@ export class App extends Component<HTMLDivElement> {
                     if (!ok) this.errorMsg('Не удалось загрузить сохранения');
                 })
                 .catch((e) => {
-                    console.log(e);
                     this.errorMsg('Не удалось загрузить сохранение');
                 })
                 .finally(() => {
@@ -132,6 +155,8 @@ export class App extends Component<HTMLDivElement> {
             this.htmlElement.getElementsByClassName('app__main')[0];
         this.headerElement =
             this.htmlElement.getElementsByClassName('app__header')[0];
+        this.footerElement =
+            this.htmlElement.getElementsByClassName('app__footer')[0];
 
         this.mainElement.classList.add('app__main--loading');
 
@@ -199,7 +224,7 @@ export class App extends Component<HTMLDivElement> {
                 this.menu.changeTheme(textures);
                 const params = this.menu.choosePreset('intermediate');
                 if (params !== null) {
-                    this.updateSize(params);
+                    this.updateCanvasSize(params);
                 }
 
                 data.drawField();
@@ -208,8 +233,6 @@ export class App extends Component<HTMLDivElement> {
 
                 this.componentDidMount();
             })
-            .catch((e) => {
-                console.log(e);
-            });
+            .catch((e) => {});
     }
 }

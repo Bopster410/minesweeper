@@ -1,6 +1,7 @@
 export type Variables = {
     backgroundColor: string;
     fontColor: string;
+    fontColorSecondary: string;
     borderColor: string;
     hoverColor: string;
 };

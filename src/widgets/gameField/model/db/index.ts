@@ -28,9 +28,7 @@ function putTile(
     if (onSuccess) {
         request.onsuccess = onSuccess;
     }
-    request.onerror = (e) => {
-        console.log('error: ', e);
-    };
+    request.onerror = (e) => {};
 
     return request;
 }
@@ -92,9 +90,7 @@ function openTile(
         }
     });
 
-    request.onerror = () => {
-        console.log(`error ${i}:${j}`);
-    };
+    request.onerror = () => {};
 
     return request;
 }
@@ -111,9 +107,7 @@ function putFlag(
         changeTileState(changeTileTransaction, tile, 'flag', onSuccess);
     });
 
-    request.onerror = () => {
-        console.log(`error ${i}:${j}`);
-    };
+    request.onerror = () => {};
 
     return request;
 }
@@ -130,9 +124,7 @@ function removeFlag(
         changeTileState(changeTileTransaction, tile, 'closed', onSuccess);
     });
 
-    request.onerror = () => {
-        console.log(`error ${i}:${j}`);
-    };
+    request.onerror = () => {};
 
     return request;
 }
@@ -153,9 +145,7 @@ function changeTileType(
             if (bombsAround) tile.info.bombsAround = bombsAround;
             putTile(changeTileTransaction, tile.info, i, j);
         }
-        request.onerror = () => {
-            console.log(`error changing type ${i}:${j}`);
-        };
+        request.onerror = () => {};
     };
 
     return request;
@@ -177,10 +167,8 @@ export function getConnection(name: string, version?: number) {
     let getTileTransaction: IDBTransaction = null;
 
     const createGetTileTransaction = () => {
-        console.log('create ch tr');
         getTileTransaction = db.transaction(STORE_NAME, 'readonly');
         getTileTransaction.addEventListener('complete', () => {
-            console.log('remove ch tr');
             getTileTransaction = null;
         });
 
@@ -201,7 +189,6 @@ export function getConnection(name: string, version?: number) {
 
                 openRequest.addEventListener('upgradeneeded', (e) => {
                     db = openRequest.result;
-                    console.log('upgrade');
                     switch (e.oldVersion) {
                         case 0:
                             initDb(db);
@@ -219,7 +206,6 @@ export function getConnection(name: string, version?: number) {
 
                 openRequest.addEventListener('success', () => {
                     db = openRequest.result;
-                    console.log('success');
                     resolve(1);
 
                     db.addEventListener('versionchange', () => {
@@ -453,11 +439,8 @@ export function getConnection(name: string, version?: number) {
                 return null;
             }
             const transaction = db.transaction(STORE_NAME, 'readonly');
-            console.log('create new readonly tr');
 
-            transaction.addEventListener('complete', () => {
-                console.log('remove new readonly tr');
-            });
+            transaction.addEventListener('complete', () => {});
             return transaction;
         },
 
@@ -465,11 +448,8 @@ export function getConnection(name: string, version?: number) {
             if (db === null) {
                 return null;
             }
-            console.log('create new readwrite tr');
             const transaction = db.transaction(STORE_NAME, 'readwrite');
-            transaction.addEventListener('complete', () => {
-                console.log('remove new readonly tr');
-            });
+            transaction.addEventListener('complete', () => {});
             return transaction;
         },
     };

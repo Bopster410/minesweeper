@@ -30,6 +30,13 @@ $header-height: 50px;
     overflow: auto;
 }
 
+.app__footer {
+    opacity: 0;
+    transition: 200ms;
+    padding-bottom: 20px;
+    color: var(--font-color-secondary);
+}
+
 .app__main--loading {
     overflow: hidden;
     position: relative;
