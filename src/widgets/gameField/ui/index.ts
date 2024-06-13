@@ -388,8 +388,6 @@ export async function getGameFieldCanvas(
                 flag.y,
             );
         });
-        await getFieldSegment(tiles, renderingArea, tile.createFromMainInfo);
-        tile.updateTiles(tiles);
 
         gameStateMethods.loadState(save.gameState);
         return true;
@@ -406,11 +404,9 @@ export async function getGameFieldCanvas(
                 break;
             case 'defeat':
                 smileBtn?.setDefeat();
-                console.log('loh!');
                 break;
             case 'victory':
                 smileBtn.setVictory();
-                console.log('victory!');
         }
     });
 
@@ -676,8 +672,8 @@ export async function getGameFieldCanvas(
 
         if (clicked === 'SMILE') {
             setMenu()
-                .then(() => console.log('ready'))
-                .catch((e) => console.log('error ', e));
+                .then(() => {})
+                .catch((e) => {});
         }
     });
 
@@ -715,14 +711,14 @@ export async function getGameFieldCanvas(
         }) => {
             if (updateSize(params)) {
                 setMenu()
-                    .then(() => console.log('ready'))
-                    .catch((e) => console.log('error ', e));
+                    .then(() => {})
+                    .catch((e) => {});
             }
         },
         stopGame: () => {
             setMenu()
-                .then(() => console.log('ready'))
-                .catch((e) => console.log('error ,', e));
+                .then(() => {})
+                .catch((e) => {});
         },
         openField: () => {
             openFullField(tiles);

@@ -16,6 +16,11 @@ function setTheme(variables: Variables) {
     );
 
     document.documentElement.style.setProperty(
+        '--font-color-secondary',
+        variables.fontColorSecondary,
+    );
+
+    document.documentElement.style.setProperty(
         '--hover-color',
         variables.hoverColor,
     );
