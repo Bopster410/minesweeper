@@ -203,96 +203,98 @@ export function openAdjacentFields(
         y: row,
     };
 
-    if (
-        getTile(tiles, renderingArea, coords.x, coords.y).tileState !== 'closed'
-    ) {
-        return null;
-    }
-
-    const openedType = getTile(
-        tiles,
-        renderingArea,
-        coords.x,
-        coords.y,
-    ).tileType;
+    const tile = getTile(tiles, renderingArea, coords.x, coords.y);
 
     const nextTilesStack = new Queue<Coords>();
     const nextNotRenderedTiles = new Queue<Coords>();
     const visitedTiles = new Set<string>();
     const visitedNotRenderedTiles = new Set<string>();
     let totalOpened = 0;
-
-    visitedTiles.add(coordsToString(coords));
-
+    const openedType = tile?.tileType;
     let transaction = connection.newReadWriteTransaction();
 
     transaction.oncomplete = () => {
         transaction = null;
     };
 
-    do {
-        getTile(tiles, renderingArea, coords.x, coords.y).open();
-        connection.openTile(coords.x, coords.y, { transaction: transaction });
+    if (tile === null) {
+        nextNotRenderedTiles.enqueue(coords);
+        visitedNotRenderedTiles.add(coordsToString(coords));
         totalOpened++;
-        if (
-            getTile(tiles, renderingArea, coords.x, coords.y).tileType ===
-            'empty'
-        ) {
-            for (
-                let j = coords.x - 1 >= 0 ? coords.x - 1 : 0;
-                j <=
-                (coords.x + 1 < widthTiles ? coords.x + 1 : widthTiles - 1);
-                j++
+    }
+
+    if (tile !== null) {
+        if (tile.tileState !== 'closed') {
+            return null;
+        }
+        visitedTiles.add(coordsToString(coords));
+
+        do {
+            getTile(tiles, renderingArea, coords.x, coords.y).open();
+            connection.openTile(coords.x, coords.y, {
+                transaction: transaction,
+            });
+            totalOpened++;
+            if (
+                getTile(tiles, renderingArea, coords.x, coords.y).tileType ===
+                'empty'
             ) {
                 for (
-                    let k = coords.y - 1 >= 0 ? coords.y - 1 : 0;
-                    k <=
-                    (coords.y + 1 < heightTiles
-                        ? coords.y + 1
-                        : heightTiles - 1);
-                    k++
+                    let j = coords.x - 1 >= 0 ? coords.x - 1 : 0;
+                    j <=
+                    (coords.x + 1 < widthTiles ? coords.x + 1 : widthTiles - 1);
+                    j++
                 ) {
-                    if (!coordsInPosition(j, k, renderingArea)) {
-                        if (
-                            !visitedNotRenderedTiles.has(
-                                coordsToString({ x: j, y: k }),
-                            )
-                        ) {
-                            nextNotRenderedTiles.enqueue({
-                                x: j,
-                                y: k,
-                            });
-                            visitedNotRenderedTiles.add(
-                                coordsToString({ x: j, y: k }),
+                    for (
+                        let k = coords.y - 1 >= 0 ? coords.y - 1 : 0;
+                        k <=
+                        (coords.y + 1 < heightTiles
+                            ? coords.y + 1
+                            : heightTiles - 1);
+                        k++
+                    ) {
+                        if (!coordsInPosition(j, k, renderingArea)) {
+                            if (
+                                !visitedNotRenderedTiles.has(
+                                    coordsToString({ x: j, y: k }),
+                                )
+                            ) {
+                                nextNotRenderedTiles.enqueue({
+                                    x: j,
+                                    y: k,
+                                });
+                                visitedNotRenderedTiles.add(
+                                    coordsToString({ x: j, y: k }),
+                                );
+                            }
+                            continue;
+                        }
+
+                        if (!visitedTiles.has(coordsToString({ x: j, y: k }))) {
+                            if (
+                                getTile(tiles, renderingArea, j, k)
+                                    .tileState === 'closed'
+                            ) {
+                                nextTilesStack.enqueue({
+                                    x: j,
+                                    y: k,
+                                });
+                            }
+
+                            visitedTiles.add(
+                                coordsToString({
+                                    x: j,
+                                    y: k,
+                                }),
                             );
                         }
-                        continue;
-                    }
-
-                    if (!visitedTiles.has(coordsToString({ x: j, y: k }))) {
-                        if (
-                            getTile(tiles, renderingArea, j, k).tileState ===
-                            'closed'
-                        ) {
-                            nextTilesStack.enqueue({
-                                x: j,
-                                y: k,
-                            });
-                        }
-
-                        visitedTiles.add(
-                            coordsToString({
-                                x: j,
-                                y: k,
-                            }),
-                        );
                     }
                 }
             }
-        }
 
-        coords = nextTilesStack.dequeue();
-    } while (coords !== null);
+            coords = nextTilesStack.dequeue();
+        } while (coords !== null);
+    }
 
     return {
         openedType: openedType,
