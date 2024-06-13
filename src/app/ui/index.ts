@@ -90,8 +90,14 @@ export class App extends Component<HTMLDivElement> {
         });
 
         this.menu.saveBtn.htmlElement.addEventListener('click', () => {
-            saveLocally(this.getSave());
-            this.successMsg('Игра сохранена!');
+            const save = this.getSave();
+            if (save !== null) {
+                saveLocally(save);
+                this.successMsg('Игра сохранена!');
+            }
+            if (save === null) {
+                this.errorMsg('Не удалось сохранить игру');
+            }
         });
 
         this.menu.loadBtn.htmlElement.addEventListener('click', () => {
@@ -104,8 +110,9 @@ export class App extends Component<HTMLDivElement> {
             this.menu.loadBtn.startLoading();
 
             this.loadSave(save)
-                .then(() => {
-                    this.successMsg('Сохранения загружены!');
+                .then((ok) => {
+                    if (ok) this.successMsg('Сохранения загружены!');
+                    if (!ok) this.errorMsg('Не удалось загрузить сохранения');
                 })
                 .catch((e) => {
                     console.log(e);

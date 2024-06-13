@@ -341,6 +341,7 @@ export async function getGameFieldCanvas(
     changeTheme(initialTheme);
 
     const getSave = (): GameSave => {
+        if (isLoading) return null;
         return {
             moves: [...moves],
             flags: new Set(flagsPositions),
@@ -355,6 +356,8 @@ export async function getGameFieldCanvas(
     };
 
     const loadSave = async (save: GameSave) => {
+        if (isLoading) return false;
+
         updateSize({
             width: save.size.width,
             height: save.size.height,
@@ -385,6 +388,9 @@ export async function getGameFieldCanvas(
                 flag.y,
             );
         });
+        await getFieldSegment(tiles, renderingArea, tile.createFromMainInfo);
+        tile.updateTiles(tiles);
+
         gameStateMethods.loadState(save.gameState);
         return true;
     };
